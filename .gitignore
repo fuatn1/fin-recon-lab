@@ -1,0 +1,35 @@
+# Build outputs
+bin/
+obj/
+out/
+artifacts/
+
+# .NET and IDE files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Test and coverage outputs
+TestResults/
+coverage/
+*.coverage
+*.coveragexml
+coverage.cobertura.xml
+
+# Packages and dependency caches
+*.nupkg
+packages/
+
+# Logs and local environment
+*.log
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+Thumbs.db

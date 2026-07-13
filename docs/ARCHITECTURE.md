@@ -1,0 +1,105 @@
+# Architecture
+
+This document describes a proposed architecture for future implementation. It is not a description of implemented software.
+
+## Candidate Future Stack
+
+- .NET 10 LTS
+- C#
+- PostgreSQL
+- RabbitMQ with MassTransit
+- OpenTelemetry
+- Docker Compose
+- xUnit
+- Testcontainers
+- BenchmarkDotNet
+
+Stack choices require architecture decision records before implementation.
+
+## Architectural Direction
+
+v0.1 should prefer a modular monolith with clear internal boundaries and no external infrastructure requirement. Unnecessary microservices should be avoided. Isolated processes should be introduced only when needed for a measurable experiment, such as broker behavior, persistence behavior, or repeatable benchmark execution.
+
+Deterministic reconciliation logic must remain separate from infrastructure concerns such as message brokers, databases, telemetry, and container orchestration.
+
+## Required Data Flow
+
+```mermaid
+flowchart LR
+    A[Scenario Definition] --> B[Truth Event Stream]
+    B --> C[Expected State Builder]
+    C --> D[Expected State]
+    B --> E[Fault Injector]
+    E --> F[Delivered Event Stream]
+    F --> G[Observed State Projector]
+    G --> H[Observed State]
+    D --> I[Reconciliation Engine]
+    H --> I
+    I --> J[Reconciliation Findings]
+    E --> K[Fault Manifest]
+    J --> L[Benchmark Evaluator]
+    K --> L
+```
+
+The Reconciliation Engine must never receive or access the Fault Manifest. The Fault Manifest is test oracle data used only by tests and the Benchmark Evaluator after reconciliation completes.
+
+## Proposed Components
+
+### Scenario Definition
+
+Defines scenario version, seed, transaction shape, event vocabulary, money configuration, fault configuration, and Reconciliation Cutoff.
+
+### Truth Event Stream Generator
+
+Creates the clean deterministic stream of `OrderPlaced`, `PaymentCaptured`, `RefundIssued`, `CommissionAssessed`, and `ShippingFeeAssessed` events from a Scenario Definition.
+
+### Expected State Builder
+
+Builds Expected State from the Truth Event Stream using configured invariants and money semantics.
+
+### Fault Injector
+
+Transforms the Truth Event Stream into a Delivered Event Stream by injecting duplicate, missing, delayed, out-of-order, and inconsistent-amount failures. It also emits the Fault Manifest for evaluation, not for reconciliation.
+
+### Observed State Projector
+
+Builds Observed State from the Delivered Event Stream up to the configured Reconciliation Cutoff.
+
+### Reconciliation Engine
+
+Compares Expected State and Observed State and produces stable Reconciliation Findings. It must not depend on the Fault Manifest, wall-clock time, real sleeps, infrastructure, or nondeterministic APIs.
+
+### Discrepancy Classifier
+
+Classifies differences such as missing record, duplicate financial effect, inconsistent amount, currency mismatch, timing-related drift, and unsupported state transition.
+
+### Report Generator
+
+Produces deterministic reconciliation reports with source-event traceability, delivered-event traceability, cutoff information, and configuration metadata.
+
+### Benchmark Evaluator
+
+Compares Reconciliation Findings with the Fault Manifest after reconciliation completes. It reports functional evaluation separately from performance measurements.
+
+### Benchmark Runner
+
+Executes configured synthetic scenarios repeatedly and records reproducibility, throughput, latency, and functional-evaluation output.
+
+## Reconciliation Timing Semantics
+
+v0.1 must use a logical Reconciliation Cutoff instead of real waiting or `Task.Delay`. Delayed delivery is represented through logical delivery ordering or delivery position. Events beyond the configured cutoff are not part of Observed State for that reconciliation run. Repeated runs with the same Scenario Definition, seed, cutoff, and configuration must produce the same findings.
+
+## ADRs Required
+
+The following choices should be captured in ADRs before implementation:
+
+- Selection of .NET 10 LTS as the target runtime.
+- Modular monolith boundaries for v0.1.
+- Money representation, currency handling, signs, and debit/credit semantics.
+- Rounding and precision behavior.
+- Deterministic event generation and fault injection strategy.
+- Reconciliation Cutoff semantics.
+- Persistence model and PostgreSQL usage.
+- RabbitMQ and MassTransit integration timing.
+- Benchmark methodology and result publication rules.
+- OpenTelemetry tracing and metrics strategy.
