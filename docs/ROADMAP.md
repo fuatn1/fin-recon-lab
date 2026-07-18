@@ -8,8 +8,8 @@ Objective: provide a small deterministic reconciliation workflow using synthetic
 
 Acceptance criteria:
 
-- A versioned Scenario Definition exists.
-- A Truth Event Stream can be generated deterministically.
+- A versioned Scenario Definition exists for the implemented `PaymentCaptured` slice.
+- A `PaymentCaptured` Truth Event Stream can be generated deterministically.
 - Expected State can be built separately from Observed State.
 - Fault injection is deterministic.
 - The Fault Injector produces a Delivered Event Stream and Fault Manifest.

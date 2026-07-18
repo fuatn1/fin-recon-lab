@@ -42,6 +42,7 @@ The repository currently implements a narrow deterministic duplicate-payment rec
 - .NET 10 solution with Domain and Application projects.
 - `Money` value object with `decimal` amount and structural validation for an ISO 4217-style three-letter uppercase currency code.
 - `PaymentCaptured` event with caller-supplied event id, order id, captured amount, logical sequence, and timestamp.
+- `payment-captured.v1` Scenario Definition and deterministic truth-stream generator for `PaymentCaptured` events.
 - Delivered payment representation that preserves source event identity, deterministic delivery sequence, and delivery attempt.
 - Expected payment projection from the clean truth event stream.
 - Deterministic duplicate-delivery fault injector that returns a delivered stream and separate Fault Manifest.
@@ -50,7 +51,7 @@ The repository currently implements a narrow deterministic duplicate-payment rec
 - Logical Reconciliation Cutoff based on delivery sequence.
 - xUnit tests for the implemented slice.
 
-The implemented slice does not include API endpoints, PostgreSQL, RabbitMQ, MassTransit, Docker, OpenTelemetry, benchmark execution, deployment support, or production-ready behavior.
+The implemented slice does not include additional event types, API endpoints, PostgreSQL, RabbitMQ, MassTransit, Docker, OpenTelemetry, benchmark execution, deployment support, or production-ready behavior.
 
 ## Architectural Direction
 
@@ -83,11 +84,11 @@ The Reconciliation Engine must never receive or access the Fault Manifest. The F
 
 ### Scenario Definition
 
-Defines scenario version, seed, transaction shape, event vocabulary, money configuration, fault configuration, and Reconciliation Cutoff.
+The implemented `payment-captured.v1` definition contains scenario version, scenario id, unsigned seed, payment count, payment amount, starting timestamp, and event interval. Broader scenario definitions remain planned.
 
 ### Truth Event Stream Generator
 
-Creates the clean deterministic stream of `OrderPlaced`, `PaymentCaptured`, `RefundIssued`, `CommissionAssessed`, and `ShippingFeeAssessed` events from a Scenario Definition.
+Creates the clean deterministic stream of `PaymentCaptured` events from a `payment-captured.v1` Scenario Definition. Future versions may add `OrderPlaced`, `RefundIssued`, `CommissionAssessed`, and `ShippingFeeAssessed`.
 
 ### Expected State Builder
 
@@ -132,6 +133,7 @@ Recorded decisions:
 - [ADR-0002](adr/0002-use-dotnet-10-and-initial-project-boundaries.md): .NET 10 and initial project boundaries.
 - [ADR-0003](adr/0003-money-currency-and-rounding-semantics.md): money, currency, and rounding semantics for the current slice.
 - [ADR-0004](adr/0004-deterministic-fault-injection-cutoff-and-manifest-isolation.md): deterministic fault injection, logical cutoff, and Fault Manifest isolation.
+- [ADR-0005](adr/0005-versioned-deterministic-payment-scenario-generation.md): versioned deterministic `PaymentCaptured` scenario generation.
 
 Remaining decisions required before their respective implementation:
 

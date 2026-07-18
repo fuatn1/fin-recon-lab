@@ -15,3 +15,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Expected payment projection, deterministic duplicate-delivery fault injector, non-idempotent observed projection for the experiment, and payment reconciliation engine.
 - xUnit coverage for money semantics, duplicate delivery, cutoff behavior, Fault Manifest isolation, and repeatability.
 - ADRs for .NET 10 project boundaries, money semantics, and deterministic fault injection with manifest isolation.
+- Versioned `payment-captured.v1` Scenario Definition and deterministic `PaymentCaptured` truth-stream generator.
