@@ -6,7 +6,7 @@ This roadmap lists milestones without dates. Capabilities remain planned until i
 
 Objective: provide a small deterministic reconciliation workflow using synthetic data and no external infrastructure requirement.
 
-Current implemented subset: versioned `PaymentCaptured` scenario generation, duplicate `PaymentCaptured` delivery injection, missing `PaymentCaptured` delivery injection, delayed `PaymentCaptured` delivery injection, expected and observed payment projections, logical cutoff handling, and captured-amount mismatch reconciliation.
+Current implemented subset: versioned `PaymentCaptured` scenario generation, duplicate `PaymentCaptured` delivery injection, missing `PaymentCaptured` delivery injection, delayed `PaymentCaptured` delivery injection, out-of-order `PaymentCaptured` delivery injection, expected and observed payment projections, logical cutoff handling, and captured-amount mismatch reconciliation.
 
 Acceptance criteria:
 
