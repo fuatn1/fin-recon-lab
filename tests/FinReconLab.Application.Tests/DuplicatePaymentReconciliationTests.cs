@@ -111,7 +111,7 @@ public sealed class DuplicatePaymentReconciliationTests
 
         var injection = InjectDuplicate(truthEventStream);
 
-        var entry = Assert.Single(injection.FaultManifest.Entries);
+        var entry = Assert.IsType<DuplicateDeliveryFaultManifestEntry>(Assert.Single(injection.FaultManifest.Entries));
         Assert.Equal("fault-duplicate-payment-001", entry.FaultId);
         Assert.Equal(FaultKind.DuplicateDelivery, entry.Kind);
         Assert.Equal("payment-captured-001", entry.SourceEventId);
@@ -129,6 +129,7 @@ public sealed class DuplicatePaymentReconciliationTests
 
         Assert.DoesNotContain(typeof(FaultManifest), methodParameters);
         Assert.DoesNotContain(typeof(DuplicatePaymentFaultInjectionResult), methodParameters);
+        Assert.DoesNotContain(typeof(MissingPaymentFaultInjectionResult), methodParameters);
     }
 
     [Theory]

@@ -16,6 +16,7 @@ public sealed class ExpectedPaymentProjection
 
         foreach (var payment in truthEventStream
             .Where(payment => payment.OrderId == orderId)
+            .Where(payment => cutoff.Includes(payment.LogicalSequence))
             .OrderBy(payment => payment.LogicalSequence)
             .ThenBy(payment => payment.EventId, StringComparer.Ordinal))
         {

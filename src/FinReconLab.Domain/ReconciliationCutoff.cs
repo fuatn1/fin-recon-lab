@@ -2,19 +2,19 @@ namespace FinReconLab.Domain;
 
 public readonly record struct ReconciliationCutoff
 {
-    public ReconciliationCutoff(long deliverySequenceInclusive)
+    public ReconciliationCutoff(long sequenceInclusive)
     {
-        if (deliverySequenceInclusive < 0)
+        if (sequenceInclusive < 0)
         {
             throw new ArgumentOutOfRangeException(
-                nameof(deliverySequenceInclusive),
+                nameof(sequenceInclusive),
                 "Cutoff sequence cannot be negative.");
         }
 
-        DeliverySequenceInclusive = deliverySequenceInclusive;
+        SequenceInclusive = sequenceInclusive;
     }
 
-    public long DeliverySequenceInclusive { get; }
+    public long SequenceInclusive { get; }
 
-    public bool Includes(long deliverySequence) => deliverySequence <= DeliverySequenceInclusive;
+    public bool Includes(long sequence) => sequence <= SequenceInclusive;
 }

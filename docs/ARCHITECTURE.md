@@ -1,6 +1,6 @@
 # Architecture
 
-This document distinguishes the currently implemented duplicate-payment slice from the planned future architecture.
+This document distinguishes the currently implemented `PaymentCaptured` reconciliation slices from the planned future architecture.
 
 ## Technology Status
 
@@ -37,7 +37,7 @@ Implemented technologies are covered by recorded ADRs. Planned technologies requ
 
 ## Currently Implemented Slice
 
-The repository currently implements a narrow deterministic duplicate-payment reconciliation slice:
+The repository currently implements narrow deterministic `PaymentCaptured` reconciliation slices:
 
 - .NET 10 solution with Domain and Application projects.
 - `Money` value object with `decimal` amount and structural validation for an ISO 4217-style three-letter uppercase currency code.
@@ -45,13 +45,13 @@ The repository currently implements a narrow deterministic duplicate-payment rec
 - `payment-captured.v1` Scenario Definition and deterministic truth-stream generator for `PaymentCaptured` events.
 - Delivered payment representation that preserves source event identity, deterministic delivery sequence, and delivery attempt.
 - Expected payment projection from the clean truth event stream.
-- Deterministic duplicate-delivery fault injector that returns a delivered stream and separate Fault Manifest.
+- Deterministic duplicate-delivery and missing-delivery fault injectors that return delivered streams and separate Fault Manifests.
 - Non-idempotent observed payment projection for the duplicate-delivery experiment.
 - Reconciliation Engine that receives only expected and observed payment snapshots.
-- Logical Reconciliation Cutoff based on delivery sequence.
+- Logical Reconciliation Cutoff based on a shared sequence boundary for expected and observed payment projections.
 - xUnit tests for the implemented slice.
 
-The implemented slice does not include additional event types, API endpoints, PostgreSQL, RabbitMQ, MassTransit, Docker, OpenTelemetry, benchmark execution, deployment support, or production-ready behavior.
+The implemented slice does not include additional event types, delayed delivery faults, out-of-order delivery faults, inconsistent-amount faults, explicit missing-record finding classification, API endpoints, PostgreSQL, RabbitMQ, MassTransit, Docker, OpenTelemetry, benchmark execution, deployment support, or production-ready behavior.
 
 ## Architectural Direction
 
@@ -96,7 +96,7 @@ Builds Expected State from the Truth Event Stream using configured invariants an
 
 ### Fault Injector
 
-Transforms the Truth Event Stream into a Delivered Event Stream by injecting duplicate, missing, delayed, out-of-order, and inconsistent-amount failures. It also emits the Fault Manifest for evaluation, not for reconciliation.
+Transforms the Truth Event Stream into a Delivered Event Stream by injecting deterministic delivery faults. Duplicate and missing `PaymentCaptured` delivery faults are implemented. Delayed delivery, out-of-order delivery, inconsistent-amount, and broader event faults remain planned. The injector also emits the Fault Manifest for evaluation, not for reconciliation.
 
 ### Observed State Projector
 
@@ -124,7 +124,9 @@ Executes configured synthetic scenarios repeatedly and records reproducibility, 
 
 ## Reconciliation Timing Semantics
 
-v0.1 must use a logical Reconciliation Cutoff instead of real waiting or `Task.Delay`. Delayed delivery is represented through logical delivery ordering or delivery position. Events beyond the configured cutoff are not part of Observed State for that reconciliation run. Repeated runs with the same Scenario Definition, seed, cutoff, and configuration must produce the same findings.
+v0.1 must use a logical Reconciliation Cutoff instead of real waiting or `Task.Delay`. Baseline delivered events use the source event `LogicalSequence` as `DeliverySequence`, so the same numeric sequence boundary can align Expected State built from truth events and Observed State built from delivered events in the current payment slices. Missing delivery preserves the sequence gap. Delayed delivery is represented through logical delivery ordering or delivery position. Events beyond the configured cutoff are not part of the corresponding projection for that reconciliation run. Repeated runs with the same Scenario Definition, seed, cutoff, and configuration must produce the same findings.
+
+Independent truth and delivery timelines may require separate cutoff semantics in a future version.
 
 ## Architecture Decision Status
 
@@ -134,6 +136,7 @@ Recorded decisions:
 - [ADR-0003](adr/0003-money-currency-and-rounding-semantics.md): money, currency, and rounding semantics for the current slice.
 - [ADR-0004](adr/0004-deterministic-fault-injection-cutoff-and-manifest-isolation.md): deterministic fault injection, logical cutoff, and Fault Manifest isolation.
 - [ADR-0005](adr/0005-versioned-deterministic-payment-scenario-generation.md): versioned deterministic `PaymentCaptured` scenario generation.
+- [ADR-0006](adr/0006-deterministic-missing-delivery-fault-injection.md): deterministic missing `PaymentCaptured` delivery fault injection.
 
 Remaining decisions required before their respective implementation:
 
