@@ -55,6 +55,8 @@ The Reconciliation Engine must never receive or access the Fault Manifest. The F
 - .NET 10 solution with Domain and Application projects.
 - Immutable `Money` value object using `decimal` amount and structural validation for an ISO 4217-style three-letter uppercase currency code.
 - `PaymentCaptured` event with caller-supplied identity, order identity, money, logical sequence, and timestamp.
+- Versioned `ScenarioDefinition` schema `payment-captured.v1` for deterministic `PaymentCaptured` truth-stream generation.
+- Deterministic truth-stream generator using scenario id, unsigned seed, and one-based ordinal as an identity namespace.
 - Delivered payment representation with source event identity, deterministic delivery sequence, and delivery attempt.
 - Expected payment projection from the clean truth event stream.
 - Deterministic duplicate-delivery fault injector that returns a delivered stream and separate Fault Manifest.
@@ -75,7 +77,7 @@ dotnet test --no-build
 
 ## Capabilities Still To Be Implemented
 
-- Full synthetic transaction-event generation with fixed seeds.
+- Synthetic generation beyond the narrow `PaymentCaptured` scenario definition.
 - Event vocabulary beyond `PaymentCaptured`: `OrderPlaced`, `RefundIssued`, `CommissionAssessed`, and `ShippingFeeAssessed`.
 - Fault types beyond duplicate `PaymentCaptured` delivery.
 - Complete separate Expected State and Observed State construction across the v0.1 event vocabulary.
@@ -102,7 +104,7 @@ See [ROADMAP.md](docs/ROADMAP.md) for milestone acceptance criteria.
 
 ## Project Status
 
-FinReconLab is pre-alpha and not ready for production use. The current implementation is a narrow deterministic duplicate-payment reconciliation slice intended to establish core design constraints.
+FinReconLab is pre-alpha and not ready for production use. The current implementation is a narrow deterministic `PaymentCaptured` scenario-generation and duplicate-payment reconciliation slice intended to establish core design constraints.
 
 ## Contributing
 

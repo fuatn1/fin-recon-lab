@@ -8,9 +8,13 @@ This document defines the initial conceptual domain for FinReconLab. It does not
 
 A versioned synthetic scenario configuration that defines transaction shape, event counts, currencies, seeds, fault rules, and reconciliation configuration.
 
+The implemented schema version is `payment-captured.v1`. It supports deterministic `PaymentCaptured` truth-stream generation using a scenario identifier, unsigned seed, payment count, payment amount, starting timestamp, and positive event interval. The v1 seed is an identity namespace and does not implement statistical randomness or distributions.
+
 ### Truth Event Stream
 
 The clean deterministic event stream generated from a Scenario Definition before fault injection. It is the source used to derive Expected State.
+
+The implemented truth-stream generator currently emits ordered `PaymentCaptured` events only.
 
 ### Expected State
 
@@ -118,6 +122,7 @@ Represents a delivery-related charge.
 
 - Duplicate events must not produce duplicate financial effects.
 - The same Scenario Definition, seed, Reconciliation Cutoff, and configuration must produce the same Reconciliation Findings.
+- The same `payment-captured.v1` Scenario Definition must produce structurally identical truth events.
 - Reconciliation output ordering must be stable.
 - Every finding must be traceable to source events and delivered events.
 - Recovery recommendations must not mutate data automatically in v0.1.
