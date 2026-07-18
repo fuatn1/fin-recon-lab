@@ -4,6 +4,8 @@ public sealed record PaymentSnapshot
 {
     public PaymentSnapshot(string orderId, Money capturedAmount, ReconciliationCutoff cutoff)
     {
+        ArgumentNullException.ThrowIfNull(capturedAmount);
+
         if (string.IsNullOrWhiteSpace(orderId))
         {
             throw new ArgumentException("Order id is required.", nameof(orderId));

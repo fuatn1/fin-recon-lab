@@ -10,7 +10,9 @@ Financial reconciliation requires explicit money semantics. Silent rounding, imp
 
 ## Decision
 
-The initial `Money` value object stores a `decimal` amount and a required three-letter uppercase ISO 4217 currency code. Addition and subtraction are allowed only when currencies match. Mixed-currency arithmetic fails explicitly.
+The initial `Money` value object stores a `decimal` amount and a required ISO 4217-style three-letter uppercase currency code. Addition and subtraction are allowed only when currencies match. Mixed-currency arithmetic fails explicitly.
+
+The implementation performs structural currency-code validation only. Complete ISO 4217 registry membership validation is not implemented in this slice.
 
 The implementation does not silently round monetary values. Exchange-rate conversion is outside v0.1. Debit, credit, sign, rounding, and precision policy for additional financial record types require future ADRs before broader implementation.
 

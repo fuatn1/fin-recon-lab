@@ -9,6 +9,8 @@ public sealed record PaymentCaptured
         long logicalSequence,
         DateTimeOffset occurredAt)
     {
+        ArgumentNullException.ThrowIfNull(capturedAmount);
+
         if (string.IsNullOrWhiteSpace(eventId))
         {
             throw new ArgumentException("Event id is required.", nameof(eventId));

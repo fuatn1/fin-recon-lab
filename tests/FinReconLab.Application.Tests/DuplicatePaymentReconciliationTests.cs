@@ -50,10 +50,9 @@ public sealed class DuplicatePaymentReconciliationTests
         var finding = Assert.Single(findings);
         Assert.Equal(ReconciliationFindingCategory.CapturedAmountMismatch, finding.Category);
         Assert.Equal("order-001", finding.OrderId);
-        Assert.Equal("USD", finding.Currency);
-        Assert.Equal(100m, finding.ExpectedAmount);
-        Assert.Equal(200m, finding.ObservedAmount);
-        Assert.Equal(100m, finding.SignedDelta);
+        Assert.Equal(new Money(100m, "USD"), finding.ExpectedAmount);
+        Assert.Equal(new Money(200m, "USD"), finding.ObservedAmount);
+        Assert.Equal(new Money(100m, "USD"), finding.SignedDelta);
     }
 
     [Fact]
@@ -91,15 +90,17 @@ public sealed class DuplicatePaymentReconciliationTests
     [Fact]
     public void Repeating_same_inputs_produces_identical_delivered_streams_and_findings()
     {
-        var truthEventStream = new[] { CreatePayment() };
-        var firstInjection = InjectDuplicate(truthEventStream);
-        var secondInjection = InjectDuplicate(truthEventStream);
+        var firstTruthEventStream = new[] { CreatePayment() };
+        var secondTruthEventStream = new[] { CreatePayment() };
+        var firstInjection = InjectDuplicate(firstTruthEventStream);
+        var secondInjection = InjectDuplicate(secondTruthEventStream);
         var cutoff = new ReconciliationCutoff(2);
 
-        var firstFindings = Reconcile(truthEventStream, firstInjection.DeliveredEventStream, cutoff);
-        var secondFindings = Reconcile(truthEventStream, secondInjection.DeliveredEventStream, cutoff);
+        var firstFindings = Reconcile(firstTruthEventStream, firstInjection.DeliveredEventStream, cutoff);
+        var secondFindings = Reconcile(secondTruthEventStream, secondInjection.DeliveredEventStream, cutoff);
 
-        Assert.Equal(firstInjection.DeliveredEventStream, secondInjection.DeliveredEventStream);
+        AssertDeliveredStreamsEqual(firstInjection.DeliveredEventStream, secondInjection.DeliveredEventStream);
+        AssertFaultManifestsEqual(firstInjection.FaultManifest, secondInjection.FaultManifest);
         Assert.Equal(firstFindings, secondFindings);
     }
 
@@ -130,6 +131,106 @@ public sealed class DuplicatePaymentReconciliationTests
         Assert.DoesNotContain(typeof(DuplicatePaymentFaultInjectionResult), methodParameters);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void Fault_request_rejects_malformed_fault_id(string faultId)
+    {
+        Assert.Throws<ArgumentException>(
+            () => new DuplicatePaymentFaultRequest(faultId, "payment-captured-001", 2));
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void Fault_request_rejects_malformed_source_event_id(string sourceEventId)
+    {
+        Assert.Throws<ArgumentException>(
+            () => new DuplicatePaymentFaultRequest("fault-duplicate-payment-001", sourceEventId, 2));
+    }
+
+    [Fact]
+    public void Fault_request_rejects_negative_delivery_sequence()
+    {
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => new DuplicatePaymentFaultRequest("fault-duplicate-payment-001", "payment-captured-001", -1));
+    }
+
+    [Fact]
+    public void Fault_injector_rejects_unknown_source_event_id()
+    {
+        var truthEventStream = new[] { CreatePayment() };
+        var request = new DuplicatePaymentFaultRequest("fault-duplicate-payment-001", "missing-event", 2);
+
+        Assert.Throws<InvalidOperationException>(
+            () => new DuplicatePaymentDeliveryFaultInjector().Inject(truthEventStream, request));
+    }
+
+    [Fact]
+    public void Fault_injector_rejects_duplicate_source_event_ids()
+    {
+        var truthEventStream = new[]
+        {
+            CreatePayment(logicalSequence: 1),
+            CreatePayment(logicalSequence: 2)
+        };
+
+        Assert.Throws<InvalidOperationException>(() => InjectDuplicate(truthEventStream));
+    }
+
+    [Fact]
+    public void Fault_injector_rejects_duplicate_delivery_sequence_at_or_before_source_delivery()
+    {
+        var truthEventStream = new[] { CreatePayment(logicalSequence: 3) };
+        var request = new DuplicatePaymentFaultRequest("fault-duplicate-payment-001", "payment-captured-001", 3);
+
+        Assert.Throws<ArgumentOutOfRangeException>(
+            () => new DuplicatePaymentDeliveryFaultInjector().Inject(truthEventStream, request));
+    }
+
+    [Fact]
+    public void Fault_injector_rejects_duplicate_delivery_sequence_collision()
+    {
+        var truthEventStream = new[]
+        {
+            CreatePayment(logicalSequence: 1),
+            CreatePayment(eventId: "payment-captured-002", logicalSequence: 2)
+        };
+        var request = new DuplicatePaymentFaultRequest("fault-duplicate-payment-001", "payment-captured-001", 2);
+
+        Assert.Throws<InvalidOperationException>(
+            () => new DuplicatePaymentDeliveryFaultInjector().Inject(truthEventStream, request));
+    }
+
+    [Fact]
+    public void Reconciliation_rejects_different_order_ids()
+    {
+        var cutoff = new ReconciliationCutoff(1);
+        var expected = new PaymentSnapshot("order-001", new Money(100m, "USD"), cutoff);
+        var observed = new PaymentSnapshot("order-002", new Money(100m, "USD"), cutoff);
+
+        Assert.Throws<InvalidOperationException>(() => new PaymentReconciliationEngine().Reconcile(expected, observed));
+    }
+
+    [Fact]
+    public void Reconciliation_rejects_different_currencies()
+    {
+        var cutoff = new ReconciliationCutoff(1);
+        var expected = new PaymentSnapshot("order-001", new Money(100m, "USD"), cutoff);
+        var observed = new PaymentSnapshot("order-001", new Money(100m, "EUR"), cutoff);
+
+        Assert.Throws<InvalidOperationException>(() => new PaymentReconciliationEngine().Reconcile(expected, observed));
+    }
+
+    [Fact]
+    public void Reconciliation_rejects_different_cutoffs()
+    {
+        var expected = new PaymentSnapshot("order-001", new Money(100m, "USD"), new ReconciliationCutoff(1));
+        var observed = new PaymentSnapshot("order-001", new Money(100m, "USD"), new ReconciliationCutoff(2));
+
+        Assert.Throws<InvalidOperationException>(() => new PaymentReconciliationEngine().Reconcile(expected, observed));
+    }
+
     private static IReadOnlyList<ReconciliationFinding> Reconcile(
         IReadOnlyList<PaymentCaptured> truthEventStream,
         IReadOnlyList<DeliveredPaymentCaptured> deliveredEventStream,
@@ -149,16 +250,41 @@ public sealed class DuplicatePaymentReconciliationTests
             new DuplicatePaymentFaultRequest(
                 "fault-duplicate-payment-001",
                 "payment-captured-001",
-                DuplicateDeliverySequence: 2));
+                duplicateDeliverySequence: 2));
     }
 
-    private static PaymentCaptured CreatePayment()
+    private static PaymentCaptured CreatePayment(
+        string eventId = "payment-captured-001",
+        string orderId = "order-001",
+        long logicalSequence = 1)
     {
         return new PaymentCaptured(
-            "payment-captured-001",
-            "order-001",
+            eventId,
+            orderId,
             new Money(100m, "USD"),
-            logicalSequence: 1,
+            logicalSequence,
             SuppliedTimestamp);
+    }
+
+    private static void AssertDeliveredStreamsEqual(
+        IReadOnlyList<DeliveredPaymentCaptured> expected,
+        IReadOnlyList<DeliveredPaymentCaptured> actual)
+    {
+        Assert.Equal(expected.Count, actual.Count);
+
+        for (var index = 0; index < expected.Count; index++)
+        {
+            Assert.Equal(expected[index], actual[index]);
+        }
+    }
+
+    private static void AssertFaultManifestsEqual(FaultManifest expected, FaultManifest actual)
+    {
+        Assert.Equal(expected.Entries.Count, actual.Entries.Count);
+
+        for (var index = 0; index < expected.Entries.Count; index++)
+        {
+            Assert.Equal(expected.Entries[index], actual.Entries[index]);
+        }
     }
 }

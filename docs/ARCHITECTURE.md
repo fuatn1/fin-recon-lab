@@ -1,8 +1,27 @@
 # Architecture
 
-This document describes a proposed architecture for future implementation. It is not a description of implemented software.
+This document distinguishes the currently implemented duplicate-payment slice from the planned future architecture.
 
-## Candidate Future Stack
+## Technology Status
+
+Implemented:
+
+- .NET 10
+- C#
+- xUnit
+
+Planned and requiring future ADRs before implementation:
+
+- PostgreSQL
+- RabbitMQ with MassTransit
+- OpenTelemetry
+- Docker Compose
+- Testcontainers
+- BenchmarkDotNet
+
+## Original Candidate Stack
+
+The broader candidate stack remains:
 
 - .NET 10 LTS
 - C#
@@ -14,7 +33,24 @@ This document describes a proposed architecture for future implementation. It is
 - Testcontainers
 - BenchmarkDotNet
 
-Stack choices require architecture decision records before implementation.
+Implemented technologies are covered by recorded ADRs. Planned technologies require their own ADRs before implementation.
+
+## Currently Implemented Slice
+
+The repository currently implements a narrow deterministic duplicate-payment reconciliation slice:
+
+- .NET 10 solution with Domain and Application projects.
+- `Money` value object with `decimal` amount and structural validation for an ISO 4217-style three-letter uppercase currency code.
+- `PaymentCaptured` event with caller-supplied event id, order id, captured amount, logical sequence, and timestamp.
+- Delivered payment representation that preserves source event identity, deterministic delivery sequence, and delivery attempt.
+- Expected payment projection from the clean truth event stream.
+- Deterministic duplicate-delivery fault injector that returns a delivered stream and separate Fault Manifest.
+- Non-idempotent observed payment projection for the duplicate-delivery experiment.
+- Reconciliation Engine that receives only expected and observed payment snapshots.
+- Logical Reconciliation Cutoff based on delivery sequence.
+- xUnit tests for the implemented slice.
+
+The implemented slice does not include API endpoints, PostgreSQL, RabbitMQ, MassTransit, Docker, OpenTelemetry, benchmark execution, deployment support, or production-ready behavior.
 
 ## Architectural Direction
 
@@ -43,7 +79,7 @@ flowchart LR
 
 The Reconciliation Engine must never receive or access the Fault Manifest. The Fault Manifest is test oracle data used only by tests and the Benchmark Evaluator after reconciliation completes.
 
-## Proposed Components
+## Planned Components
 
 ### Scenario Definition
 
@@ -89,17 +125,18 @@ Executes configured synthetic scenarios repeatedly and records reproducibility, 
 
 v0.1 must use a logical Reconciliation Cutoff instead of real waiting or `Task.Delay`. Delayed delivery is represented through logical delivery ordering or delivery position. Events beyond the configured cutoff are not part of Observed State for that reconciliation run. Repeated runs with the same Scenario Definition, seed, cutoff, and configuration must produce the same findings.
 
-## ADRs Required
+## Architecture Decision Status
 
-The following choices should be captured in ADRs before implementation:
+Recorded decisions:
 
-- Selection of .NET 10 LTS as the target runtime.
-- Modular monolith boundaries for v0.1.
-- Money representation, currency handling, signs, and debit/credit semantics.
-- Rounding and precision behavior.
-- Deterministic event generation and fault injection strategy.
-- Reconciliation Cutoff semantics.
+- [ADR-0002](adr/0002-use-dotnet-10-and-initial-project-boundaries.md): .NET 10 and initial project boundaries.
+- [ADR-0003](adr/0003-money-currency-and-rounding-semantics.md): money, currency, and rounding semantics for the current slice.
+- [ADR-0004](adr/0004-deterministic-fault-injection-cutoff-and-manifest-isolation.md): deterministic fault injection, logical cutoff, and Fault Manifest isolation.
+
+Remaining decisions required before their respective implementation:
+
 - Persistence model and PostgreSQL usage.
-- RabbitMQ and MassTransit integration timing.
+- RabbitMQ and MassTransit broker integration.
 - Benchmark methodology and result publication rules.
 - OpenTelemetry tracing and metrics strategy.
+- Other unresolved future concerns that would affect architecture, data semantics, or reproducibility.

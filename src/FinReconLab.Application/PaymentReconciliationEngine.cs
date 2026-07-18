@@ -36,11 +36,10 @@ public sealed class PaymentReconciliationEngine
             new ReconciliationFinding(
                 ReconciliationFindingCategory.CapturedAmountMismatch,
                 expected.OrderId,
-                expected.CapturedAmount.Currency,
                 expected.Cutoff,
-                expected.CapturedAmount.Amount,
-                observed.CapturedAmount.Amount,
-                signedDelta.Amount)
+                expected.CapturedAmount,
+                observed.CapturedAmount,
+                signedDelta)
         ];
     }
 }

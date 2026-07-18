@@ -1,12 +1,14 @@
 namespace FinReconLab.Domain;
 
-public readonly record struct Money
+public sealed record Money
 {
     public Money(decimal amount, string currency)
     {
         if (!IsValidCurrency(currency))
         {
-            throw new ArgumentException("Currency must be a three-letter uppercase ISO 4217 code.", nameof(currency));
+            throw new ArgumentException(
+                "Currency must be an ISO 4217-style three-letter uppercase code.",
+                nameof(currency));
         }
 
         Amount = amount;
@@ -19,14 +21,18 @@ public readonly record struct Money
 
     public static Money Zero(string currency) => new(0m, currency);
 
-    public static Money operator +(Money left, Money right)
+    public static Money operator +(Money? left, Money? right)
     {
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
         EnsureSameCurrency(left, right);
         return new Money(left.Amount + right.Amount, left.Currency);
     }
 
-    public static Money operator -(Money left, Money right)
+    public static Money operator -(Money? left, Money? right)
     {
+        ArgumentNullException.ThrowIfNull(left);
+        ArgumentNullException.ThrowIfNull(right);
         EnsureSameCurrency(left, right);
         return new Money(left.Amount - right.Amount, left.Currency);
     }

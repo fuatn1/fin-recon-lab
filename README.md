@@ -53,7 +53,7 @@ The Reconciliation Engine must never receive or access the Fault Manifest. The F
 ## Implemented In The First Vertical Slice
 
 - .NET 10 solution with Domain and Application projects.
-- Immutable `Money` value object using `decimal` amount and explicit ISO 4217 currency code.
+- Immutable `Money` value object using `decimal` amount and structural validation for an ISO 4217-style three-letter uppercase currency code.
 - `PaymentCaptured` event with caller-supplied identity, order identity, money, logical sequence, and timestamp.
 - Delivered payment representation with source event identity, deterministic delivery sequence, and delivery attempt.
 - Expected payment projection from the clean truth event stream.
@@ -106,7 +106,7 @@ FinReconLab is pre-alpha and not ready for production use. The current implement
 
 ## Contributing
 
-Contributions are welcome once implementation work begins. See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and quality expectations.
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and quality expectations.
 
 ## Security
 

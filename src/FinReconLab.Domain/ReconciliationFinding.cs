@@ -10,25 +10,29 @@ public sealed record ReconciliationFinding
     public ReconciliationFinding(
         ReconciliationFindingCategory category,
         string orderId,
-        string currency,
         ReconciliationCutoff cutoff,
-        decimal expectedAmount,
-        decimal observedAmount,
-        decimal signedDelta)
+        Money expectedAmount,
+        Money observedAmount,
+        Money signedDelta)
     {
+        ArgumentNullException.ThrowIfNull(expectedAmount);
+        ArgumentNullException.ThrowIfNull(observedAmount);
+        ArgumentNullException.ThrowIfNull(signedDelta);
+
         if (string.IsNullOrWhiteSpace(orderId))
         {
             throw new ArgumentException("Order id is required.", nameof(orderId));
         }
 
-        if (string.IsNullOrWhiteSpace(currency))
+        if (!StringComparer.Ordinal.Equals(expectedAmount.Currency, observedAmount.Currency)
+            || !StringComparer.Ordinal.Equals(expectedAmount.Currency, signedDelta.Currency))
         {
-            throw new ArgumentException("Currency is required.", nameof(currency));
+            throw new InvalidOperationException(
+                "Expected amount, observed amount, and signed delta must use the same currency.");
         }
 
         Category = category;
         OrderId = orderId;
-        Currency = currency;
         Cutoff = cutoff;
         ExpectedAmount = expectedAmount;
         ObservedAmount = observedAmount;
@@ -39,13 +43,11 @@ public sealed record ReconciliationFinding
 
     public string OrderId { get; }
 
-    public string Currency { get; }
-
     public ReconciliationCutoff Cutoff { get; }
 
-    public decimal ExpectedAmount { get; }
+    public Money ExpectedAmount { get; }
 
-    public decimal ObservedAmount { get; }
+    public Money ObservedAmount { get; }
 
-    public decimal SignedDelta { get; }
+    public Money SignedDelta { get; }
 }

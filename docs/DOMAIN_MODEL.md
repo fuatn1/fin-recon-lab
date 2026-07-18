@@ -106,7 +106,8 @@ Represents a delivery-related charge.
 
 ## Money Semantics
 
-- Every monetary value must have an amount and explicit ISO 4217 currency code.
+- Every monetary value must have an amount and explicit ISO 4217-style three-letter uppercase currency code.
+- Complete ISO 4217 registry membership validation is not implemented in the duplicate-payment slice.
 - Amounts in different currencies must never be added or compared as equivalent.
 - Exchange-rate conversion is outside v0.1.
 - Rounding and precision rules require a dedicated ADR before implementation.
