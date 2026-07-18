@@ -1,6 +1,6 @@
 # Contributing
 
-Thank you for your interest in FinReconLab. The project is currently pre-alpha and contains only foundation documentation. The contribution workflow below describes the intended process once implementation work begins.
+Thank you for your interest in FinReconLab. The project is currently pre-alpha and contains a narrow deterministic duplicate-payment reconciliation slice. The contribution workflow below describes the intended process as implementation work continues.
 
 ## Issues
 
@@ -28,6 +28,6 @@ Generated or AI-assisted contributions remain the contributor's responsibility. 
 ## Quality Expectations
 
 - Keep deterministic reconciliation logic separate from infrastructure.
-- Use `decimal` for monetary values and explicit ISO 4217 currency codes.
+- Use `decimal` for monetary values and explicit ISO 4217-style three-letter uppercase currency codes.
 - Do not fabricate metrics, benchmark results, citations, users, or adoption claims.
 - Do not weaken tests or remove validation to make a build pass.

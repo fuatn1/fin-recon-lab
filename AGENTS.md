@@ -14,7 +14,7 @@ These instructions apply to all future coding-agent sessions in this repository.
 
 - Prefer simple, testable architecture over decorative complexity.
 - Production code will target .NET 10.
-- Use `decimal` for monetary values and require explicit ISO 4217 currency codes.
+- Use `decimal` for monetary values and require explicit ISO 4217-style three-letter uppercase currency codes.
 - Deterministic reconciliation logic must be separated from infrastructure concerns.
 - Do not introduce infrastructure dependencies into deterministic domain logic.
 - Every behavior change requires tests.

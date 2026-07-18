@@ -2,7 +2,7 @@
 
 FinReconLab is an open-source reference implementation and experimental toolkit for deterministic reconciliation in event-driven financial transaction systems.
 
-The repository is currently pre-alpha and contains only the project foundation and engineering charter. It does not contain a production-ready implementation, runnable application, package, benchmark result, or deployment artifact. Runnable instructions will be added with the first implementation milestone.
+The repository is currently pre-alpha. It contains the project foundation plus the first deterministic duplicate-payment reconciliation vertical slice. It does not contain a production-ready implementation, runnable service, benchmark result, deployment artifact, API endpoint, database integration, message broker integration, or Docker setup.
 
 ## Problem
 
@@ -50,14 +50,35 @@ flowchart LR
 
 The Reconciliation Engine must never receive or access the Fault Manifest. The Fault Manifest is oracle data for tests and benchmark evaluation after reconciliation completes.
 
-## Capabilities To Be Implemented
+## Implemented In The First Vertical Slice
 
-- Synthetic transaction-event generation with fixed seeds.
-- Event vocabulary for `OrderPlaced`, `PaymentCaptured`, `RefundIssued`, `CommissionAssessed`, and `ShippingFeeAssessed`.
-- Deterministic fault injection for known failure scenarios.
-- Separate Expected State and Observed State construction.
-- Logical Reconciliation Cutoff semantics.
-- Expected-state versus observed-state reconciliation.
+- .NET 10 solution with Domain and Application projects.
+- Immutable `Money` value object using `decimal` amount and structural validation for an ISO 4217-style three-letter uppercase currency code.
+- `PaymentCaptured` event with caller-supplied identity, order identity, money, logical sequence, and timestamp.
+- Delivered payment representation with source event identity, deterministic delivery sequence, and delivery attempt.
+- Expected payment projection from the clean truth event stream.
+- Deterministic duplicate-delivery fault injector that returns a delivered stream and separate Fault Manifest.
+- Non-idempotent observed payment projection for the duplicate-delivery experiment.
+- Payment reconciliation engine that compares expected and observed snapshots without receiving the Fault Manifest.
+- Logical Reconciliation Cutoff based on delivery sequence.
+- xUnit tests for money semantics, duplicate delivery, cutoff behavior, manifest isolation, and repeatability.
+
+## Build And Test
+
+Requires .NET SDK `10.0.301` or a compatible .NET 10 patch version.
+
+```bash
+dotnet restore
+dotnet build --no-restore
+dotnet test --no-build
+```
+
+## Capabilities Still To Be Implemented
+
+- Full synthetic transaction-event generation with fixed seeds.
+- Event vocabulary beyond `PaymentCaptured`: `OrderPlaced`, `RefundIssued`, `CommissionAssessed`, and `ShippingFeeAssessed`.
+- Fault types beyond duplicate `PaymentCaptured` delivery.
+- Complete separate Expected State and Observed State construction across the v0.1 event vocabulary.
 - Discrepancy classification with source-event and delivered-event traceability.
 - Reproducible reconciliation reports.
 
@@ -81,11 +102,11 @@ See [ROADMAP.md](docs/ROADMAP.md) for milestone acceptance criteria.
 
 ## Project Status
 
-FinReconLab is in Phase 0: project foundation and engineering charter. It is not ready for production use and does not provide runnable implementation instructions yet.
+FinReconLab is pre-alpha and not ready for production use. The current implementation is a narrow deterministic duplicate-payment reconciliation slice intended to establish core design constraints.
 
 ## Contributing
 
-Contributions are welcome once implementation work begins. See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and quality expectations.
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution workflow and quality expectations.
 
 ## Security
 

@@ -1,6 +1,6 @@
 # Security Policy
 
-FinReconLab is not production-ready. The repository currently contains only project foundation documentation and should not be used to process real financial, personal, merchant, customer, or production data.
+FinReconLab is not production-ready. The repository currently contains a narrow deterministic reconciliation experiment and should not be used to process real financial, personal, merchant, customer, or production data.
 
 ## Reporting Security Issues
 
