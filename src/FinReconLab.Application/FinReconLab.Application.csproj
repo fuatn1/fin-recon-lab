@@ -1,0 +1,5 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="..\FinReconLab.Domain\FinReconLab.Domain.csproj" />
+  </ItemGroup>
+</Project>
