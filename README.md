@@ -2,7 +2,7 @@
 
 FinReconLab is an open-source reference implementation and experimental toolkit for deterministic reconciliation in event-driven financial transaction systems.
 
-The repository is currently pre-alpha. It contains the project foundation plus narrow deterministic `PaymentCaptured` scenario-generation, duplicate-delivery, and missing-delivery reconciliation slices. It does not contain a production-ready implementation, runnable service, benchmark result, deployment artifact, API endpoint, database integration, message broker integration, or Docker setup.
+The repository is currently pre-alpha. It contains the project foundation plus narrow deterministic `PaymentCaptured` scenario-generation, duplicate-delivery, missing-delivery, and delayed-delivery reconciliation slices. It does not contain a production-ready implementation, runnable service, benchmark result, deployment artifact, API endpoint, database integration, message broker integration, or Docker setup.
 
 ## Problem
 
@@ -50,7 +50,7 @@ flowchart LR
 
 The Reconciliation Engine must never receive or access the Fault Manifest. The Fault Manifest is oracle data for tests and benchmark evaluation after reconciliation completes.
 
-## Implemented In The First Vertical Slice
+## Implemented So Far
 
 - .NET 10 solution with Domain and Application projects.
 - Immutable `Money` value object using `decimal` amount and structural validation for an ISO 4217-style three-letter uppercase currency code.
@@ -59,13 +59,13 @@ The Reconciliation Engine must never receive or access the Fault Manifest. The F
 - Deterministic truth-stream generator using scenario id, unsigned seed, and one-based ordinal as an identity namespace.
 - Delivered payment representation with source event identity, deterministic delivery sequence, and delivery attempt.
 - Expected payment projection from the clean truth event stream.
-- Deterministic duplicate-delivery and missing-delivery fault injectors that return delivered streams and separate Fault Manifests.
-- Non-idempotent observed payment projection for the duplicate-delivery experiment.
+- Deterministic duplicate-delivery, missing-delivery, and delayed-delivery fault injectors that return delivered streams and separate Fault Manifests.
+- Non-idempotent observed payment projection for the payment-delivery experiments.
 - Payment reconciliation engine that compares expected and observed snapshots without receiving the Fault Manifest.
 - Logical Reconciliation Cutoff based on a shared sequence boundary for expected and observed payment projections.
-- xUnit tests for money semantics, scenario generation, duplicate delivery, missing delivery, cutoff behavior, manifest isolation, and repeatability.
+- xUnit tests for money semantics, scenario generation, duplicate delivery, missing delivery, delayed delivery, cutoff behavior, manifest isolation, and repeatability.
 
-In the current v0.1 payment slices, baseline delivered events use the source event `LogicalSequence` as `DeliverySequence`. The same numeric cutoff can therefore align Expected State built from truth events and Observed State built from delivered events. Missing delivery preserves the sequence gap. Independent truth and delivery timelines may require separate cutoff semantics in a future version.
+In the current v0.1 payment slices, baseline delivered events use the source event `LogicalSequence` as `DeliverySequence`. The same numeric cutoff can therefore align Expected State built from truth events and Observed State built from delivered events. Missing delivery preserves the sequence gap, and delayed delivery moves the observed delivery position forward on the same synthetic sequence axis. Independent truth and transport timelines may require separate cutoff semantics in a future version.
 
 ## Build And Test
 
@@ -81,7 +81,8 @@ dotnet test --no-build
 
 - Synthetic generation beyond the narrow `PaymentCaptured` scenario definition.
 - Event vocabulary beyond `PaymentCaptured`: `OrderPlaced`, `RefundIssued`, `CommissionAssessed`, and `ShippingFeeAssessed`.
-- Fault types beyond duplicate and missing `PaymentCaptured` delivery.
+- Fault types beyond duplicate, missing, and delayed `PaymentCaptured` delivery.
+- Out-of-order and inconsistent-amount delivery faults.
 - Explicit missing-record finding classification.
 - Complete separate Expected State and Observed State construction across the v0.1 event vocabulary.
 - Discrepancy classification with source-event and delivered-event traceability.
@@ -107,7 +108,7 @@ See [ROADMAP.md](docs/ROADMAP.md) for milestone acceptance criteria.
 
 ## Project Status
 
-FinReconLab is pre-alpha and not ready for production use. The current implementation is a narrow deterministic `PaymentCaptured` scenario-generation, duplicate-delivery, and missing-delivery reconciliation slice intended to establish core design constraints.
+FinReconLab is pre-alpha and not ready for production use. The current implementation is a narrow deterministic `PaymentCaptured` scenario-generation, duplicate-delivery, missing-delivery, and delayed-delivery reconciliation slice intended to establish core design constraints.
 
 ## Contributing
 

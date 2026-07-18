@@ -22,11 +22,11 @@ The financial state that should exist after applying configured rules and invari
 
 ### Fault Injector
 
-The component that transforms the Truth Event Stream into a Delivered Event Stream by applying configured delivery faults. Duplicate and missing `PaymentCaptured` delivery faults are implemented. Delayed delivery, out-of-order delivery, inconsistent-amount faults, and broader event faults remain planned.
+The component that transforms the Truth Event Stream into a Delivered Event Stream by applying configured delivery faults. Duplicate, missing, and delayed `PaymentCaptured` delivery faults are implemented. Out-of-order delivery, inconsistent-amount faults, and broader event faults remain planned.
 
 ### Delivered Event Stream
 
-The faulted event stream visible to the observed-side projection. Delayed delivery is represented by logical delivery ordering or delivery position, not real waiting.
+The faulted event stream visible to the observed-side projection. Delayed delivery is represented by moving the observed delivery position forward on the synthetic sequence axis, not by real waiting.
 
 ### Observed State
 
@@ -34,11 +34,11 @@ The financial state projected from the Delivered Event Stream up to the configur
 
 ### Fault Manifest
 
-Oracle data emitted by the Fault Injector describing injected faults. The Reconciliation Engine must never receive or access the Fault Manifest. Tests and the Benchmark Evaluator may use it after reconciliation completes. The implemented manifest uses explicit duplicate-delivery and missing-delivery entry records rather than nullable placeholder fields.
+Oracle data emitted by the Fault Injector describing injected faults. The Reconciliation Engine must never receive or access the Fault Manifest. Tests and the Benchmark Evaluator may use it after reconciliation completes. The implemented manifest uses explicit duplicate-delivery, missing-delivery, and delayed-delivery entry records rather than nullable placeholder fields.
 
 ### Reconciliation Cutoff
 
-A deterministic logical boundary for a reconciliation run. In the current v0.1 payment slices, baseline delivered events use the source event `LogicalSequence` as `DeliverySequence`, so the same numeric sequence boundary can align Expected State and Observed State. Missing delivery preserves the sequence gap. Independent truth and delivery timelines may require separate cutoff semantics in a future version.
+A deterministic logical boundary for a reconciliation run. In the current v0.1 payment slices, baseline delivered events use the source event `LogicalSequence` as `DeliverySequence`, so the same numeric sequence boundary can align Expected State and Observed State. Missing delivery preserves the sequence gap, and delayed delivery moves the observed delivery position forward on the same synthetic sequence axis. Independent truth and transport timelines may require separate cutoff semantics in a future version.
 
 ### Reconciliation Run
 

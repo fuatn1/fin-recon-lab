@@ -65,8 +65,43 @@ public sealed record MissingDeliveryFaultManifestEntry : FaultManifestEntry
     public override FaultKind Kind => FaultKind.MissingDelivery;
 }
 
+public sealed record DelayedDeliveryFaultManifestEntry : FaultManifestEntry
+{
+    public DelayedDeliveryFaultManifestEntry(
+        string faultId,
+        string sourceEventId,
+        long originalDeliverySequence,
+        long delayedDeliverySequence)
+        : base(faultId, sourceEventId)
+    {
+        if (originalDeliverySequence < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(originalDeliverySequence),
+                "Original delivery sequence cannot be negative.");
+        }
+
+        if (delayedDeliverySequence <= originalDeliverySequence)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(delayedDeliverySequence),
+                "Delayed delivery sequence must be after the original delivery sequence.");
+        }
+
+        OriginalDeliverySequence = originalDeliverySequence;
+        DelayedDeliverySequence = delayedDeliverySequence;
+    }
+
+    public override FaultKind Kind => FaultKind.DelayedDelivery;
+
+    public long OriginalDeliverySequence { get; }
+
+    public long DelayedDeliverySequence { get; }
+}
+
 public enum FaultKind
 {
     DuplicateDelivery,
-    MissingDelivery
+    MissingDelivery,
+    DelayedDelivery
 }
