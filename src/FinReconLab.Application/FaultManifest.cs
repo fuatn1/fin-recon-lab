@@ -14,30 +14,38 @@ public sealed record FaultManifest
 
 public abstract record FaultManifestEntry
 {
-    protected FaultManifestEntry(string faultId, string sourceEventId)
+    protected FaultManifestEntry(string faultId)
     {
         if (string.IsNullOrWhiteSpace(faultId))
         {
             throw new ArgumentException("Fault id is required.", nameof(faultId));
         }
 
+        FaultId = faultId;
+    }
+
+    public string FaultId { get; }
+
+    public abstract FaultKind Kind { get; }
+}
+
+public abstract record SingleSourceFaultManifestEntry : FaultManifestEntry
+{
+    protected SingleSourceFaultManifestEntry(string faultId, string sourceEventId)
+        : base(faultId)
+    {
         if (string.IsNullOrWhiteSpace(sourceEventId))
         {
             throw new ArgumentException("Source event id is required.", nameof(sourceEventId));
         }
 
-        FaultId = faultId;
         SourceEventId = sourceEventId;
     }
 
-    public string FaultId { get; }
-
     public string SourceEventId { get; }
-
-    public abstract FaultKind Kind { get; }
 }
 
-public sealed record DuplicateDeliveryFaultManifestEntry : FaultManifestEntry
+public sealed record DuplicateDeliveryFaultManifestEntry : SingleSourceFaultManifestEntry
 {
     public DuplicateDeliveryFaultManifestEntry(string faultId, string sourceEventId, long deliverySequence)
         : base(faultId, sourceEventId)
@@ -55,7 +63,7 @@ public sealed record DuplicateDeliveryFaultManifestEntry : FaultManifestEntry
     public long DeliverySequence { get; }
 }
 
-public sealed record MissingDeliveryFaultManifestEntry : FaultManifestEntry
+public sealed record MissingDeliveryFaultManifestEntry : SingleSourceFaultManifestEntry
 {
     public MissingDeliveryFaultManifestEntry(string faultId, string sourceEventId)
         : base(faultId, sourceEventId)
@@ -65,7 +73,7 @@ public sealed record MissingDeliveryFaultManifestEntry : FaultManifestEntry
     public override FaultKind Kind => FaultKind.MissingDelivery;
 }
 
-public sealed record DelayedDeliveryFaultManifestEntry : FaultManifestEntry
+public sealed record DelayedDeliveryFaultManifestEntry : SingleSourceFaultManifestEntry
 {
     public DelayedDeliveryFaultManifestEntry(
         string faultId,
@@ -99,9 +107,105 @@ public sealed record DelayedDeliveryFaultManifestEntry : FaultManifestEntry
     public long DelayedDeliverySequence { get; }
 }
 
+public sealed record OutOfOrderDeliveryFaultManifestEntry : FaultManifestEntry
+{
+    public OutOfOrderDeliveryFaultManifestEntry(
+        string faultId,
+        string earlierSourceEventId,
+        string laterSourceEventId,
+        long earlierOriginalDeliverySequence,
+        long earlierDeliveredSequence,
+        long laterOriginalDeliverySequence,
+        long laterDeliveredSequence)
+        : base(faultId)
+    {
+        if (string.IsNullOrWhiteSpace(earlierSourceEventId))
+        {
+            throw new ArgumentException("Earlier source event id is required.", nameof(earlierSourceEventId));
+        }
+
+        if (string.IsNullOrWhiteSpace(laterSourceEventId))
+        {
+            throw new ArgumentException("Later source event id is required.", nameof(laterSourceEventId));
+        }
+
+        if (StringComparer.Ordinal.Equals(earlierSourceEventId, laterSourceEventId))
+        {
+            throw new ArgumentException(
+                "Earlier and later source event ids must be different.",
+                nameof(laterSourceEventId));
+        }
+
+        if (earlierOriginalDeliverySequence < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(earlierOriginalDeliverySequence),
+                "Earlier original delivery sequence cannot be negative.");
+        }
+
+        if (earlierDeliveredSequence < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(earlierDeliveredSequence),
+                "Earlier delivered sequence cannot be negative.");
+        }
+
+        if (laterOriginalDeliverySequence < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(laterOriginalDeliverySequence),
+                "Later original delivery sequence cannot be negative.");
+        }
+
+        if (laterDeliveredSequence < 0)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(laterDeliveredSequence),
+                "Later delivered sequence cannot be negative.");
+        }
+
+        if (earlierOriginalDeliverySequence >= laterOriginalDeliverySequence)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(earlierOriginalDeliverySequence),
+                "Earlier original delivery sequence must be before the later original delivery sequence.");
+        }
+
+        if (earlierDeliveredSequence != laterOriginalDeliverySequence ||
+            laterDeliveredSequence != earlierOriginalDeliverySequence)
+        {
+            throw new ArgumentException(
+                "Delivered sequences must represent an exact pairwise swap of the original delivery sequences.",
+                nameof(earlierDeliveredSequence));
+        }
+
+        EarlierSourceEventId = earlierSourceEventId;
+        LaterSourceEventId = laterSourceEventId;
+        EarlierOriginalDeliverySequence = earlierOriginalDeliverySequence;
+        EarlierDeliveredSequence = earlierDeliveredSequence;
+        LaterOriginalDeliverySequence = laterOriginalDeliverySequence;
+        LaterDeliveredSequence = laterDeliveredSequence;
+    }
+
+    public override FaultKind Kind => FaultKind.OutOfOrderDelivery;
+
+    public string EarlierSourceEventId { get; }
+
+    public string LaterSourceEventId { get; }
+
+    public long EarlierOriginalDeliverySequence { get; }
+
+    public long EarlierDeliveredSequence { get; }
+
+    public long LaterOriginalDeliverySequence { get; }
+
+    public long LaterDeliveredSequence { get; }
+}
+
 public enum FaultKind
 {
     DuplicateDelivery,
     MissingDelivery,
-    DelayedDelivery
+    DelayedDelivery,
+    OutOfOrderDelivery
 }

@@ -33,10 +33,10 @@ The current v0.1 payment slices use a synthetic shared logical sequence axis. Ba
 
 For a `PaymentCaptured` event with `LogicalSequence` `2` delayed to `DeliverySequence` `4`, `ReconciliationCutoff(3)` includes the event in Expected State and excludes it from Observed State, producing a captured-amount mismatch. `ReconciliationCutoff(4)` includes the delayed delivery in Observed State and removes that mismatch.
 
-ADR-0004 records the original cutoff and manifest-isolation decision. Independent truth and transport timelines may require separate cutoff semantics in a future version.
+ADR-0004 records the original cutoff and manifest-isolation decision. ADR-0008 records out-of-order delivery on the same synthetic sequence axis. Independent truth and transport timelines may require separate cutoff semantics in a future version.
 
 ## Consequences
 
-Duplicate, missing, and delayed `PaymentCaptured` delivery faults now share a typed manifest abstraction while preserving oracle isolation from reconciliation.
+Duplicate, missing, and delayed `PaymentCaptured` delivery faults share a typed manifest abstraction while preserving oracle isolation from reconciliation. Out-of-order delivery is implemented later and recorded by ADR-0008.
 
-Out-of-order delivery, inconsistent-amount delivery, explicit missing-record classification, broader event types, infrastructure integration, benchmarks, and production readiness remain planned.
+Inconsistent-amount delivery, explicit missing-record classification, broader event types, infrastructure integration, benchmarks, and production readiness remain planned.

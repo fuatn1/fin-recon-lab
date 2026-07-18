@@ -290,6 +290,7 @@ public sealed class DelayedPaymentDeliveryFaultInjectorTests
         Assert.DoesNotContain(typeof(DuplicatePaymentFaultInjectionResult), methodParameters);
         Assert.DoesNotContain(typeof(MissingPaymentFaultInjectionResult), methodParameters);
         Assert.DoesNotContain(typeof(DelayedPaymentFaultInjectionResult), methodParameters);
+        Assert.DoesNotContain(typeof(OutOfOrderPaymentFaultInjectionResult), methodParameters);
     }
 
     private static IReadOnlyList<ReconciliationFinding> Reconcile(

@@ -6,7 +6,7 @@ Accepted
 
 ## Context
 
-The first vertical slice demonstrates duplicate delivery by comparing a clean expected payment state with a non-idempotent observed projection. The reconciliation engine must detect the amount mismatch without knowing the injected fault answer. ADR-0006 and ADR-0007 record later clarifications that the current v0.1 payment slices use a shared numeric sequence boundary for expected and observed projections.
+The first vertical slice demonstrates duplicate delivery by comparing a clean expected payment state with a non-idempotent observed projection. The reconciliation engine must detect the amount mismatch without knowing the injected fault answer. ADR-0006, ADR-0007, and ADR-0008 record later clarifications that the current v0.1 payment slices use a shared numeric sequence boundary for expected and observed projections.
 
 ## Decision
 
