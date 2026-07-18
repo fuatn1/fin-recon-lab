@@ -2,11 +2,11 @@ using FinReconLab.Domain;
 
 namespace FinReconLab.Application;
 
-public sealed class DuplicatePaymentDeliveryFaultInjector
+public sealed class MissingPaymentDeliveryFaultInjector
 {
-    public DuplicatePaymentFaultInjectionResult Inject(
+    public MissingPaymentFaultInjectionResult Inject(
         IEnumerable<PaymentCaptured> truthEventStream,
-        DuplicatePaymentFaultRequest request)
+        MissingPaymentFaultRequest request)
     {
         ArgumentNullException.ThrowIfNull(truthEventStream);
         ArgumentNullException.ThrowIfNull(request);
@@ -27,26 +27,15 @@ public sealed class DuplicatePaymentDeliveryFaultInjector
                 $"Truth event stream contains duplicate source event id '{duplicateSourceEventId}'.");
         }
 
-        var selectedEvent = truthEvents.FirstOrDefault(payment => payment.EventId == request.SourceEventId)
-            ?? throw new InvalidOperationException(
-                $"Source event id '{request.SourceEventId}' was not found in the truth event stream.");
-
-        if (request.DuplicateDeliverySequence <= selectedEvent.LogicalSequence)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(request),
-                "Duplicate delivery sequence must be after the selected source event baseline delivery sequence.");
-        }
-
-        if (truthEvents.Any(payment => payment.LogicalSequence == request.DuplicateDeliverySequence))
+        if (!truthEvents.Any(payment => StringComparer.Ordinal.Equals(payment.EventId, request.SourceEventId)))
         {
             throw new InvalidOperationException(
-                $"Duplicate delivery sequence '{request.DuplicateDeliverySequence}' collides with an existing baseline delivery sequence.");
+                $"Source event id '{request.SourceEventId}' was not found in the truth event stream.");
         }
 
         var deliveredEvents = truthEvents
+            .Where(payment => !StringComparer.Ordinal.Equals(payment.EventId, request.SourceEventId))
             .Select(payment => new DeliveredPaymentCaptured(payment, payment.LogicalSequence, deliveryAttempt: 1))
-            .Append(new DeliveredPaymentCaptured(selectedEvent, request.DuplicateDeliverySequence, deliveryAttempt: 2))
             .OrderBy(delivery => delivery.DeliverySequence)
             .ThenBy(delivery => delivery.SourceEventId, StringComparer.Ordinal)
             .ThenBy(delivery => delivery.DeliveryAttempt)
@@ -54,19 +43,18 @@ public sealed class DuplicatePaymentDeliveryFaultInjector
 
         var manifest = new FaultManifest(
             [
-                new DuplicateDeliveryFaultManifestEntry(
+                new MissingDeliveryFaultManifestEntry(
                     request.FaultId,
-                    request.SourceEventId,
-                    request.DuplicateDeliverySequence)
+                    request.SourceEventId)
             ]);
 
-        return new DuplicatePaymentFaultInjectionResult(deliveredEvents, manifest);
+        return new MissingPaymentFaultInjectionResult(deliveredEvents, manifest);
     }
 }
 
-public sealed record DuplicatePaymentFaultRequest
+public sealed record MissingPaymentFaultRequest
 {
-    public DuplicatePaymentFaultRequest(string faultId, string sourceEventId, long duplicateDeliverySequence)
+    public MissingPaymentFaultRequest(string faultId, string sourceEventId)
     {
         if (string.IsNullOrWhiteSpace(faultId))
         {
@@ -78,28 +66,18 @@ public sealed record DuplicatePaymentFaultRequest
             throw new ArgumentException("Source event id is required.", nameof(sourceEventId));
         }
 
-        if (duplicateDeliverySequence < 0)
-        {
-            throw new ArgumentOutOfRangeException(
-                nameof(duplicateDeliverySequence),
-                "Duplicate delivery sequence cannot be negative.");
-        }
-
         FaultId = faultId;
         SourceEventId = sourceEventId;
-        DuplicateDeliverySequence = duplicateDeliverySequence;
     }
 
     public string FaultId { get; }
 
     public string SourceEventId { get; }
-
-    public long DuplicateDeliverySequence { get; }
 }
 
-public sealed record DuplicatePaymentFaultInjectionResult
+public sealed record MissingPaymentFaultInjectionResult
 {
-    public DuplicatePaymentFaultInjectionResult(
+    public MissingPaymentFaultInjectionResult(
         IEnumerable<DeliveredPaymentCaptured> deliveredEventStream,
         FaultManifest faultManifest)
     {

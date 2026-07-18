@@ -1,6 +1,6 @@
 # Domain Model
 
-This document defines the initial conceptual domain for FinReconLab. It does not define implementation code or storage schema.
+This document defines the initial conceptual domain for FinReconLab. It also notes the currently implemented subset without defining a storage schema.
 
 ## Reconciliation Concepts
 
@@ -22,7 +22,7 @@ The financial state that should exist after applying configured rules and invari
 
 ### Fault Injector
 
-The component planned to transform the Truth Event Stream into a Delivered Event Stream by applying configured duplicate, missing, delayed, out-of-order, and inconsistent-amount faults.
+The component that transforms the Truth Event Stream into a Delivered Event Stream by applying configured delivery faults. Duplicate and missing `PaymentCaptured` delivery faults are implemented. Delayed delivery, out-of-order delivery, inconsistent-amount faults, and broader event faults remain planned.
 
 ### Delivered Event Stream
 
@@ -34,11 +34,11 @@ The financial state projected from the Delivered Event Stream up to the configur
 
 ### Fault Manifest
 
-Oracle data emitted by the Fault Injector describing injected faults. The Reconciliation Engine must never receive or access the Fault Manifest. Tests and the Benchmark Evaluator may use it after reconciliation completes.
+Oracle data emitted by the Fault Injector describing injected faults. The Reconciliation Engine must never receive or access the Fault Manifest. Tests and the Benchmark Evaluator may use it after reconciliation completes. The implemented manifest uses explicit duplicate-delivery and missing-delivery entry records rather than nullable placeholder fields.
 
 ### Reconciliation Cutoff
 
-A deterministic logical boundary for a reconciliation run. Events beyond the configured cutoff are not part of Observed State for that run. A missing event can only be classified relative to a defined cutoff.
+A deterministic logical boundary for a reconciliation run. In the current v0.1 payment slices, baseline delivered events use the source event `LogicalSequence` as `DeliverySequence`, so the same numeric sequence boundary can align Expected State and Observed State. Missing delivery preserves the sequence gap. Independent truth and delivery timelines may require separate cutoff semantics in a future version.
 
 ### Reconciliation Run
 
@@ -46,7 +46,7 @@ A deterministic execution that compares Expected State and Observed State for a 
 
 ### Reconciliation Findings
 
-Stable reconciliation output describing classified differences between Expected State and Observed State. Findings must be traceable to source events and delivered events.
+Stable reconciliation output describing classified differences between Expected State and Observed State. The implemented payment slice currently reports captured-amount mismatches; explicit missing-record classification remains planned. Findings must be traceable to source events and delivered events as the model expands.
 
 ### Benchmark Evaluator
 
@@ -111,7 +111,7 @@ Represents a delivery-related charge.
 ## Money Semantics
 
 - Every monetary value must have an amount and explicit ISO 4217-style three-letter uppercase currency code.
-- Complete ISO 4217 registry membership validation is not implemented in the duplicate-payment slice.
+- Complete ISO 4217 registry membership validation is not implemented in the current payment slice.
 - Amounts in different currencies must never be added or compared as equivalent.
 - Exchange-rate conversion is outside v0.1.
 - Rounding and precision rules require a dedicated ADR before implementation.
@@ -127,4 +127,4 @@ Represents a delivery-related charge.
 - Every finding must be traceable to source events and delivered events.
 - Recovery recommendations must not mutate data automatically in v0.1.
 - Expected State and Observed State must be compared using explicit transaction identity.
-- Events beyond the configured Reconciliation Cutoff must not affect Observed State for that run.
+- Events beyond the configured Reconciliation Cutoff must not affect the corresponding Expected State or Observed State projection for that run.

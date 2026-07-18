@@ -26,4 +26,4 @@ A deterministic reconciliation process needs explicit inputs, stable configurati
 
 ## Current Project Position
 
-FinReconLab does not yet solve the full set of problems described here. The current repository includes project documentation and a narrow deterministic duplicate-payment reconciliation slice that demonstrates expected-state versus observed-state comparison for one synthetic failure mode.
+FinReconLab does not yet solve the full set of problems described here. The current repository includes project documentation and narrow deterministic `PaymentCaptured` scenario-generation, duplicate-delivery, and missing-delivery reconciliation slices that demonstrate expected-state versus observed-state comparison for synthetic payment delivery failures.

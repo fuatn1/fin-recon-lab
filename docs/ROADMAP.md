@@ -6,6 +6,8 @@ This roadmap lists milestones without dates. Capabilities remain planned until i
 
 Objective: provide a small deterministic reconciliation workflow using synthetic data and no external infrastructure requirement.
 
+Current implemented subset: versioned `PaymentCaptured` scenario generation, duplicate `PaymentCaptured` delivery injection, missing `PaymentCaptured` delivery injection, expected and observed payment projections, logical cutoff handling, and captured-amount mismatch reconciliation.
+
 Acceptance criteria:
 
 - A versioned Scenario Definition exists for the implemented `PaymentCaptured` slice.
@@ -14,7 +16,7 @@ Acceptance criteria:
 - Fault injection is deterministic.
 - The Fault Injector produces a Delivered Event Stream and Fault Manifest.
 - The Fault Manifest is inaccessible to the Reconciliation Engine.
-- A logical Reconciliation Cutoff defines which delivered events are included in Observed State.
+- A logical Reconciliation Cutoff defines which truth and delivered events are included in the current payment projections.
 - Reconciliation Findings are stable and traceable to source and delivered events.
 - Repeatability tests prove that identical scenario, seed, cutoff, and configuration inputs produce identical findings.
 - v0.1 has no external infrastructure requirement.
