@@ -14,9 +14,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Money, payment event, delivered event, reconciliation cutoff, snapshot, and finding domain types.
 - Expected payment projection, deterministic duplicate-delivery fault injector, non-idempotent observed projection for the experiment, and payment reconciliation engine.
 - Deterministic missing-delivery fault injector for `PaymentCaptured` events.
-- Typed Fault Manifest entries for duplicate-delivery and missing-delivery faults.
+- Deterministic delayed-delivery fault injector for `PaymentCaptured` events.
+- Typed Fault Manifest entries for duplicate-delivery, missing-delivery, and delayed-delivery faults.
 - Reconciliation cutoff naming clarified around a shared sequence boundary for the current payment slices.
-- xUnit coverage for money semantics, scenario generation, duplicate delivery, missing delivery, cutoff behavior, Fault Manifest isolation, and repeatability.
+- xUnit coverage for money semantics, scenario generation, duplicate delivery, missing delivery, delayed delivery, cutoff behavior, Fault Manifest isolation, and repeatability.
 - ADRs for .NET 10 project boundaries, money semantics, and deterministic fault injection with manifest isolation.
 - Versioned `payment-captured.v1` Scenario Definition and deterministic `PaymentCaptured` truth-stream generator.
 - ADR for deterministic missing-delivery fault injection.
+- ADR for deterministic delayed-delivery fault injection.
