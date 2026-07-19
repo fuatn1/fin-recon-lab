@@ -21,7 +21,7 @@ public sealed class NonIdempotentObservedPaymentProjectionForExperiment
             .ThenBy(delivery => delivery.SourceEventId, StringComparer.Ordinal)
             .ThenBy(delivery => delivery.DeliveryAttempt))
         {
-            capturedAmount += delivery.SourceEvent.CapturedAmount;
+            capturedAmount += delivery.DeliveredCapturedAmount;
         }
 
         return new PaymentSnapshot(orderId, capturedAmount, cutoff);

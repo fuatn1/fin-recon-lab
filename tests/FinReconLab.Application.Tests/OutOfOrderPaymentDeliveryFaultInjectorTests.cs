@@ -404,6 +404,7 @@ public sealed class OutOfOrderPaymentDeliveryFaultInjectorTests
         Assert.DoesNotContain(typeof(MissingPaymentFaultInjectionResult), methodParameters);
         Assert.DoesNotContain(typeof(DelayedPaymentFaultInjectionResult), methodParameters);
         Assert.DoesNotContain(typeof(OutOfOrderPaymentFaultInjectionResult), methodParameters);
+        Assert.DoesNotContain(typeof(InconsistentPaymentAmountFaultInjectionResult), methodParameters);
     }
 
     private static IReadOnlyList<ReconciliationFinding> Reconcile(

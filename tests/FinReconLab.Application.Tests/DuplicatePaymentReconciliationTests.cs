@@ -132,6 +132,7 @@ public sealed class DuplicatePaymentReconciliationTests
         Assert.DoesNotContain(typeof(MissingPaymentFaultInjectionResult), methodParameters);
         Assert.DoesNotContain(typeof(DelayedPaymentFaultInjectionResult), methodParameters);
         Assert.DoesNotContain(typeof(OutOfOrderPaymentFaultInjectionResult), methodParameters);
+        Assert.DoesNotContain(typeof(InconsistentPaymentAmountFaultInjectionResult), methodParameters);
     }
 
     [Theory]

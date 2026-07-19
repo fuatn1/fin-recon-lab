@@ -3,8 +3,18 @@ namespace FinReconLab.Domain;
 public sealed record DeliveredPaymentCaptured
 {
     public DeliveredPaymentCaptured(PaymentCaptured sourceEvent, long deliverySequence, int deliveryAttempt)
+        : this(sourceEvent, GetSourceCapturedAmount(sourceEvent), deliverySequence, deliveryAttempt)
+    {
+    }
+
+    public DeliveredPaymentCaptured(
+        PaymentCaptured sourceEvent,
+        Money deliveredCapturedAmount,
+        long deliverySequence,
+        int deliveryAttempt)
     {
         ArgumentNullException.ThrowIfNull(sourceEvent);
+        ArgumentNullException.ThrowIfNull(deliveredCapturedAmount);
 
         if (deliverySequence < 0)
         {
@@ -17,6 +27,7 @@ public sealed record DeliveredPaymentCaptured
         }
 
         SourceEvent = sourceEvent;
+        DeliveredCapturedAmount = deliveredCapturedAmount;
         DeliverySequence = deliverySequence;
         DeliveryAttempt = deliveryAttempt;
     }
@@ -25,7 +36,15 @@ public sealed record DeliveredPaymentCaptured
 
     public string SourceEventId => SourceEvent.EventId;
 
+    public Money DeliveredCapturedAmount { get; }
+
     public long DeliverySequence { get; }
 
     public int DeliveryAttempt { get; }
+
+    private static Money GetSourceCapturedAmount(PaymentCaptured? sourceEvent)
+    {
+        ArgumentNullException.ThrowIfNull(sourceEvent);
+        return sourceEvent.CapturedAmount;
+    }
 }
