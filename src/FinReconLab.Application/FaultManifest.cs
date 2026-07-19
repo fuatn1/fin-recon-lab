@@ -1,3 +1,5 @@
+using FinReconLab.Domain;
+
 namespace FinReconLab.Application;
 
 public sealed record FaultManifest
@@ -202,10 +204,47 @@ public sealed record OutOfOrderDeliveryFaultManifestEntry : FaultManifestEntry
     public long LaterDeliveredSequence { get; }
 }
 
+public sealed record InconsistentAmountDeliveryFaultManifestEntry : SingleSourceFaultManifestEntry
+{
+    public InconsistentAmountDeliveryFaultManifestEntry(
+        string faultId,
+        string sourceEventId,
+        Money originalCapturedAmount,
+        Money deliveredCapturedAmount)
+        : base(faultId, sourceEventId)
+    {
+        ArgumentNullException.ThrowIfNull(originalCapturedAmount);
+        ArgumentNullException.ThrowIfNull(deliveredCapturedAmount);
+
+        if (!StringComparer.Ordinal.Equals(originalCapturedAmount.Currency, deliveredCapturedAmount.Currency))
+        {
+            throw new InvalidOperationException(
+                "Original and delivered captured amounts must use the same currency.");
+        }
+
+        if (originalCapturedAmount == deliveredCapturedAmount)
+        {
+            throw new ArgumentException(
+                "Delivered captured amount must differ from the original captured amount.",
+                nameof(deliveredCapturedAmount));
+        }
+
+        OriginalCapturedAmount = originalCapturedAmount;
+        DeliveredCapturedAmount = deliveredCapturedAmount;
+    }
+
+    public override FaultKind Kind => FaultKind.InconsistentAmountDelivery;
+
+    public Money OriginalCapturedAmount { get; }
+
+    public Money DeliveredCapturedAmount { get; }
+}
+
 public enum FaultKind
 {
     DuplicateDelivery,
     MissingDelivery,
     DelayedDelivery,
-    OutOfOrderDelivery
+    OutOfOrderDelivery,
+    InconsistentAmountDelivery
 }

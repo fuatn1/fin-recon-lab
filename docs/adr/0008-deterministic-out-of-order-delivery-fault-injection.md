@@ -51,4 +51,4 @@ ADR-0004 records the original cutoff and manifest-isolation decision. ADR-0007 r
 
 Duplicate, missing, delayed, and out-of-order `PaymentCaptured` delivery faults now share explicit typed manifest entries while preserving oracle isolation from reconciliation.
 
-Inconsistent-amount delivery, explicit missing-record classification, broader event types, infrastructure integration, benchmarks, deployment support, and production readiness remain planned.
+Inconsistent-amount delivery is implemented later and recorded by ADR-0009. Explicit missing-record classification, broader event types, infrastructure integration, benchmarks, deployment support, and production readiness remain planned.

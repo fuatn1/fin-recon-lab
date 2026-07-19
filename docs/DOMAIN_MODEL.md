@@ -22,19 +22,19 @@ The financial state that should exist after applying configured rules and invari
 
 ### Fault Injector
 
-The component that transforms the Truth Event Stream into a Delivered Event Stream by applying configured delivery faults. Duplicate, missing, delayed, and out-of-order `PaymentCaptured` delivery faults are implemented. Inconsistent-amount faults and broader event faults remain planned.
+The component that transforms the Truth Event Stream into a Delivered Event Stream by applying configured delivery faults. Duplicate, missing, delayed, out-of-order, and caller-supplied inconsistent-amount `PaymentCaptured` delivery faults are implemented. Broader event and fault types remain planned.
 
 ### Delivered Event Stream
 
-The faulted event stream visible to the observed-side projection. Delayed delivery is represented by moving the observed delivery position forward on the synthetic sequence axis, and out-of-order delivery is represented by swapping two baseline delivery positions on that axis. Neither behavior uses real waiting.
+The faulted event stream visible to the observed-side projection. Each delivered payment preserves its clean immutable `PaymentCaptured` source event and separately exposes `DeliveredCapturedAmount`. Normal delivery uses the source amount; inconsistent-amount delivery changes only the selected delivered amount. Delayed delivery moves the observed delivery position forward on the synthetic sequence axis, and out-of-order delivery swaps two baseline delivery positions on that axis. None of these behaviors uses real waiting or random corruption.
 
 ### Observed State
 
-The financial state projected from the Delivered Event Stream up to the configured Reconciliation Cutoff.
+The financial state projected from each delivered event's `DeliveredCapturedAmount` up to the configured Reconciliation Cutoff. Expected State continues to use the clean truth-event amount.
 
 ### Fault Manifest
 
-Oracle data emitted by the Fault Injector describing injected faults. The Reconciliation Engine must never receive or access the Fault Manifest. Tests and the Benchmark Evaluator may use it after reconciliation completes. The implemented manifest uses explicit duplicate-delivery, missing-delivery, delayed-delivery, and out-of-order delivery entry records rather than nullable placeholder fields.
+Oracle data emitted by the Fault Injector describing injected faults. The Reconciliation Engine must never receive or access the Fault Manifest. Tests and the Benchmark Evaluator may use it after reconciliation completes. The implemented manifest uses explicit duplicate-delivery, missing-delivery, delayed-delivery, out-of-order delivery, and inconsistent-amount delivery entry records rather than nullable placeholder fields. The inconsistent-amount entry records exact original and delivered `Money` values in the same currency.
 
 ### Reconciliation Cutoff
 

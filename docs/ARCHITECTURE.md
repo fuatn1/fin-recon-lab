@@ -43,15 +43,15 @@ The repository currently implements narrow deterministic `PaymentCaptured` recon
 - `Money` value object with `decimal` amount and structural validation for an ISO 4217-style three-letter uppercase currency code.
 - `PaymentCaptured` event with caller-supplied event id, order id, captured amount, logical sequence, and timestamp.
 - `payment-captured.v1` Scenario Definition and deterministic truth-stream generator for `PaymentCaptured` events.
-- Delivered payment representation that preserves source event identity, deterministic delivery sequence, and delivery attempt.
+- Delivered payment representation that preserves the clean source event and separately carries the amount observed in delivery, plus deterministic delivery sequence and delivery attempt.
 - Expected payment projection from the clean truth event stream.
-- Deterministic duplicate-delivery, missing-delivery, delayed-delivery, and out-of-order delivery fault injectors that return delivered streams and separate Fault Manifests.
+- Deterministic duplicate-delivery, missing-delivery, delayed-delivery, out-of-order delivery, and inconsistent-amount delivery fault injectors that return delivered streams and separate Fault Manifests.
 - Non-idempotent observed payment projection for the payment-delivery experiments.
 - Reconciliation Engine that receives only expected and observed payment snapshots.
 - Logical Reconciliation Cutoff based on a shared sequence boundary for expected and observed payment projections.
 - xUnit tests for the implemented slice.
 
-The implemented slice does not include additional event types, inconsistent-amount faults, explicit missing-record finding classification, API endpoints, PostgreSQL, RabbitMQ, MassTransit, Docker, OpenTelemetry, benchmark execution, deployment support, or production-ready behavior.
+The implemented slice does not include additional event types, explicit missing-record finding classification, API endpoints, PostgreSQL, RabbitMQ, MassTransit, Docker, OpenTelemetry, benchmark execution, deployment support, or production-ready behavior.
 
 ## Architectural Direction
 
@@ -96,11 +96,11 @@ Builds Expected State from the Truth Event Stream using configured invariants an
 
 ### Fault Injector
 
-Transforms the Truth Event Stream into a Delivered Event Stream by injecting deterministic delivery faults. Duplicate, missing, delayed, and out-of-order `PaymentCaptured` delivery faults are implemented. Inconsistent-amount and broader event faults remain planned. The injector also emits the Fault Manifest for evaluation, not for reconciliation.
+Transforms the Truth Event Stream into a Delivered Event Stream by injecting deterministic delivery faults. Duplicate, missing, delayed, out-of-order, and caller-supplied inconsistent-amount `PaymentCaptured` delivery faults are implemented. Broader event and fault types remain planned. The injector also emits the Fault Manifest for evaluation, not for reconciliation.
 
 ### Observed State Projector
 
-Builds Observed State from the Delivered Event Stream up to the configured Reconciliation Cutoff.
+Builds Observed State from the amount carried by each delivered event up to the configured Reconciliation Cutoff. Clean truth-event amounts remain the source for Expected State.
 
 ### Reconciliation Engine
 
@@ -139,6 +139,7 @@ Recorded decisions:
 - [ADR-0006](adr/0006-deterministic-missing-delivery-fault-injection.md): deterministic missing `PaymentCaptured` delivery fault injection.
 - [ADR-0007](adr/0007-deterministic-delayed-delivery-fault-injection.md): deterministic delayed `PaymentCaptured` delivery fault injection.
 - [ADR-0008](adr/0008-deterministic-out-of-order-delivery-fault-injection.md): deterministic out-of-order `PaymentCaptured` delivery fault injection.
+- [ADR-0009](adr/0009-deterministic-inconsistent-payment-amount-delivery.md): deterministic inconsistent-amount `PaymentCaptured` delivery fault injection.
 
 Remaining decisions required before their respective implementation:
 
