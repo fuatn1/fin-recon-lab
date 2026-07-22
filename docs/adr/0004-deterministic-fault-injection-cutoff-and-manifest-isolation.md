@@ -14,6 +14,8 @@ Duplicate delivery is injected deterministically from caller-supplied inputs. Th
 
 The fault injector returns a delivered event stream and a separate Fault Manifest. The Reconciliation Engine receives only expected and observed payment snapshots. Tests and later evaluation code may inspect the Fault Manifest only after reconciliation completes.
 
+ADR-0010 later records role-specific payment snapshots and contribution evidence that make findings traceable without weakening this Fault Manifest isolation.
+
 ## Consequences
 
 The slice preserves a clean separation between implementation behavior and oracle data. Repeated runs with the same events, duplicate request, cutoff, and configuration produce structurally identical delivered streams and findings.

@@ -4,7 +4,7 @@ namespace FinReconLab.Application;
 
 public sealed class ExpectedPaymentProjection
 {
-    public PaymentSnapshot Build(
+    public ExpectedPaymentSnapshot Build(
         string orderId,
         string currency,
         ReconciliationCutoff cutoff,
@@ -12,17 +12,23 @@ public sealed class ExpectedPaymentProjection
     {
         ArgumentNullException.ThrowIfNull(truthEventStream);
 
-        var capturedAmount = Money.Zero(currency);
-
-        foreach (var payment in truthEventStream
+        var contributions = truthEventStream
             .Where(payment => payment.OrderId == orderId)
             .Where(payment => cutoff.Includes(payment.LogicalSequence))
             .OrderBy(payment => payment.LogicalSequence)
-            .ThenBy(payment => payment.EventId, StringComparer.Ordinal))
+            .ThenBy(payment => payment.EventId, StringComparer.Ordinal)
+            .Select(payment => new ExpectedPaymentContribution(
+                payment.EventId,
+                payment.LogicalSequence,
+                payment.CapturedAmount))
+            .ToArray();
+
+        var capturedAmount = Money.Zero(currency);
+        foreach (var contribution in contributions)
         {
-            capturedAmount += payment.CapturedAmount;
+            capturedAmount += contribution.AppliedCapturedAmount;
         }
 
-        return new PaymentSnapshot(orderId, capturedAmount, cutoff);
+        return new ExpectedPaymentSnapshot(orderId, capturedAmount, cutoff, contributions);
     }
 }

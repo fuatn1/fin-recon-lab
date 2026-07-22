@@ -44,10 +44,10 @@ The repository currently implements narrow deterministic `PaymentCaptured` recon
 - `PaymentCaptured` event with caller-supplied event id, order id, captured amount, logical sequence, and timestamp.
 - `payment-captured.v1` Scenario Definition and deterministic truth-stream generator for `PaymentCaptured` events.
 - Delivered payment representation that preserves the clean source event and separately carries the amount observed in delivery, plus deterministic delivery sequence and delivery attempt.
-- Expected payment projection from the clean truth event stream.
+- Expected payment projection from the clean truth event stream into an `ExpectedPaymentSnapshot` with ordered source contributions.
 - Deterministic duplicate-delivery, missing-delivery, delayed-delivery, out-of-order delivery, and inconsistent-amount delivery fault injectors that return delivered streams and separate Fault Manifests.
-- Non-idempotent observed payment projection for the payment-delivery experiments.
-- Reconciliation Engine that receives only expected and observed payment snapshots.
+- Non-idempotent observed payment projection into an `ObservedPaymentSnapshot` with ordered delivered contributions.
+- Reconciliation Engine that receives only role-specific expected and observed payment snapshots and emits both contribution traces on mismatch findings.
 - Logical Reconciliation Cutoff based on a shared sequence boundary for expected and observed payment projections.
 - xUnit tests for the implemented slice.
 
@@ -92,7 +92,7 @@ Creates the clean deterministic stream of `PaymentCaptured` events from a `payme
 
 ### Expected State Builder
 
-Builds Expected State from the Truth Event Stream using configured invariants and money semantics.
+Builds an `ExpectedPaymentSnapshot` from truth events included by the cutoff. Its contribution evidence is ordered by source logical sequence and source event id using ordinal comparison.
 
 ### Fault Injector
 
@@ -100,11 +100,11 @@ Transforms the Truth Event Stream into a Delivered Event Stream by injecting det
 
 ### Observed State Projector
 
-Builds Observed State from the amount carried by each delivered event up to the configured Reconciliation Cutoff. Clean truth-event amounts remain the source for Expected State.
+Builds an `ObservedPaymentSnapshot` from delivered events included by the cutoff. Its contribution evidence records the delivered amount and is ordered by delivery sequence, source event id using ordinal comparison, and delivery attempt. Clean truth-event amounts remain the source for Expected State.
 
 ### Reconciliation Engine
 
-Compares Expected State and Observed State and produces stable Reconciliation Findings. It must not depend on the Fault Manifest, wall-clock time, real sleeps, infrastructure, or nondeterministic APIs.
+Compares the role-specific Expected State and Observed State snapshots and produces stable Reconciliation Findings containing both contribution traces. It must not depend on the Fault Manifest, infer the injected fault, use wall-clock time or real sleeps, or depend on infrastructure or nondeterministic APIs.
 
 ### Discrepancy Classifier
 
@@ -140,6 +140,7 @@ Recorded decisions:
 - [ADR-0007](adr/0007-deterministic-delayed-delivery-fault-injection.md): deterministic delayed `PaymentCaptured` delivery fault injection.
 - [ADR-0008](adr/0008-deterministic-out-of-order-delivery-fault-injection.md): deterministic out-of-order `PaymentCaptured` delivery fault injection.
 - [ADR-0009](adr/0009-deterministic-inconsistent-payment-amount-delivery.md): deterministic inconsistent-amount `PaymentCaptured` delivery fault injection.
+- [ADR-0010](adr/0010-deterministic-reconciliation-traceability.md): deterministic source-event and delivered-event contribution traceability.
 
 Remaining decisions required before their respective implementation:
 
