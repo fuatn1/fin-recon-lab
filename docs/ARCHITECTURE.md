@@ -48,6 +48,7 @@ The repository currently implements narrow deterministic `PaymentCaptured` recon
 - Deterministic duplicate-delivery, missing-delivery, delayed-delivery, out-of-order delivery, and inconsistent-amount delivery fault injectors that return delivered streams and separate Fault Manifests.
 - Non-idempotent observed payment projection into an `ObservedPaymentSnapshot` with ordered delivered contributions.
 - Reconciliation Engine that receives only role-specific expected and observed payment snapshots and emits both contribution traces on mismatch findings.
+- `reconciliation-report.v1` contract and deterministic JSON serializer for ordered scenario configuration, cutoff, snapshot, finding, and contribution evidence.
 - Logical Reconciliation Cutoff based on a shared sequence boundary for expected and observed payment projections.
 - xUnit tests for the implemented slice.
 
@@ -73,6 +74,10 @@ flowchart LR
     D --> I[Reconciliation Engine]
     H --> I
     I --> J[Reconciliation Findings]
+    A --> M[Reconciliation Report]
+    D --> M
+    H --> M
+    J --> M
     E --> K[Fault Manifest]
     J --> L[Benchmark Evaluator]
     K --> L
@@ -80,7 +85,7 @@ flowchart LR
 
 The Reconciliation Engine must never receive or access the Fault Manifest. The Fault Manifest is test oracle data used only by tests and the Benchmark Evaluator after reconciliation completes.
 
-## Planned Components
+## Component Status
 
 ### Scenario Definition
 
@@ -112,7 +117,9 @@ Classifies differences such as missing record, duplicate financial effect, incon
 
 ### Report Generator
 
-Produces deterministic reconciliation reports with source-event traceability, delivered-event traceability, cutoff information, and configuration metadata.
+The implemented report builder creates the immutable `reconciliation-report.v1` contract from a Scenario Definition, reconciliation cutoff, role-specific snapshot collections, and findings. The serializer writes explicit UTF-8 JSON property order, orders snapshots and findings by order id using ordinal comparison, preserves each snapshot's deterministic contribution ordering, represents scenario timestamps with invariant round-trip formatting, and writes intervals as ticks.
+
+The report contains no generation timestamp, Fault Manifest, fault request, fault-injection result, or inferred fault type. Report persistence, transport, additional schemas, and broader event vocabulary remain planned.
 
 ### Benchmark Evaluator
 
@@ -141,6 +148,7 @@ Recorded decisions:
 - [ADR-0008](adr/0008-deterministic-out-of-order-delivery-fault-injection.md): deterministic out-of-order `PaymentCaptured` delivery fault injection.
 - [ADR-0009](adr/0009-deterministic-inconsistent-payment-amount-delivery.md): deterministic inconsistent-amount `PaymentCaptured` delivery fault injection.
 - [ADR-0010](adr/0010-deterministic-reconciliation-traceability.md): deterministic source-event and delivered-event contribution traceability.
+- [ADR-0011](adr/0011-versioned-deterministic-reconciliation-report.md): versioned deterministic reconciliation report and JSON serialization.
 
 Remaining decisions required before their respective implementation:
 

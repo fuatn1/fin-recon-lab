@@ -2,7 +2,7 @@
 
 FinReconLab is an open-source reference implementation and experimental toolkit for deterministic reconciliation in event-driven financial transaction systems.
 
-The repository is currently pre-alpha. It contains the project foundation plus narrow deterministic `PaymentCaptured` scenario-generation, duplicate-delivery, missing-delivery, delayed-delivery, out-of-order delivery, inconsistent-amount delivery, and reconciliation-traceability slices. It does not contain a production-ready implementation, runnable service, benchmark result, deployment artifact, API endpoint, database integration, message broker integration, or Docker setup.
+The repository is currently pre-alpha. It contains the project foundation plus narrow deterministic `PaymentCaptured` scenario-generation, delivery-fault, reconciliation-traceability, and versioned reconciliation-report slices. It does not contain a production-ready implementation, runnable service, benchmark result, deployment artifact, API endpoint, database integration, message broker integration, or Docker setup.
 
 ## Problem
 
@@ -30,6 +30,7 @@ The first implementation milestone is expected to model a deterministic reconcil
 - Build Observed State from delivered events up to a logical Reconciliation Cutoff.
 - Reconcile Expected State and Observed State.
 - Produce stable Reconciliation Findings traceable to source and delivered events.
+- Serialize deterministic reconciliation evidence as a versioned report.
 
 ```mermaid
 flowchart LR
@@ -43,6 +44,10 @@ flowchart LR
     D --> I[Reconciliation Engine]
     H --> I
     I --> J[Reconciliation Findings]
+    A --> M[Reconciliation Report]
+    D --> M
+    H --> M
+    J --> M
     E --> K[Fault Manifest]
     J --> L[Benchmark Evaluator]
     K --> L
@@ -63,8 +68,9 @@ The Reconciliation Engine must never receive or access the Fault Manifest. The F
 - Deterministic duplicate-delivery, missing-delivery, delayed-delivery, out-of-order delivery, and inconsistent-amount delivery fault injectors that return delivered streams and separate Fault Manifests.
 - Non-idempotent observed payment projection for the payment-delivery experiments.
 - Payment reconciliation engine that compares role-specific expected and observed snapshots and emits both trace collections on captured-amount mismatch findings without receiving the Fault Manifest.
+- Versioned `reconciliation-report.v1` contract and deterministic UTF-8 JSON serializer containing scenario configuration, cutoff, ordered snapshots, findings, and contribution traces without Fault Manifest data.
 - Logical Reconciliation Cutoff based on a shared sequence boundary for expected and observed payment projections.
-- xUnit tests for money semantics, scenario generation, duplicate delivery, missing delivery, delayed delivery, out-of-order delivery, inconsistent-amount delivery, traceability, cutoff behavior, manifest isolation, and repeatability.
+- xUnit tests for money semantics, scenario generation, delivery faults, traceability, report serialization, cutoff behavior, manifest isolation, and repeatability.
 
 In the current v0.1 payment slices, baseline delivered events use the source event `LogicalSequence` as `DeliverySequence`. The same numeric cutoff can therefore align Expected State built from truth events and Observed State built from delivered events. Missing delivery preserves the sequence gap, delayed delivery moves the observed delivery position forward, and out-of-order delivery swaps two baseline delivery positions on the same synthetic sequence axis. Independent truth and transport timelines may require separate cutoff semantics in a future version.
 
@@ -86,7 +92,7 @@ dotnet test --no-build
 - Explicit missing-record finding classification.
 - Complete separate Expected State and Observed State construction across the v0.1 event vocabulary.
 - Explicit fault attribution and broader discrepancy classification beyond captured-amount mismatch.
-- Reproducible reconciliation reports.
+- Report schemas beyond `reconciliation-report.v1` and report persistence or transport.
 
 ## Non-Goals
 
@@ -108,7 +114,7 @@ See [ROADMAP.md](docs/ROADMAP.md) for milestone acceptance criteria.
 
 ## Project Status
 
-FinReconLab is pre-alpha and not ready for production use. The current implementation is a narrow deterministic `PaymentCaptured` scenario-generation, delivery-fault, reconciliation, and source/delivered contribution traceability slice intended to establish core design constraints.
+FinReconLab is pre-alpha and not ready for production use. The current implementation is a narrow deterministic `PaymentCaptured` scenario-generation, delivery-fault, reconciliation, traceability, and versioned-report slice intended to establish core design constraints.
 
 ## Contributing
 
