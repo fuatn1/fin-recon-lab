@@ -31,3 +31,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - ADR for deterministic out-of-order delivery fault injection.
 - ADR for deterministic inconsistent-amount delivery fault injection.
 - ADR for deterministic reconciliation traceability.
+- Versioned `reconciliation-report.v1` contract with immutable, ordered scenario-level reconciliation evidence.
+- Deterministic UTF-8 JSON report serialization with explicit property, snapshot, finding, and contribution ordering.
+- ADR for deterministic reconciliation reporting and continued Fault Manifest isolation.

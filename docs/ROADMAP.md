@@ -6,7 +6,7 @@ This roadmap lists milestones without dates. Capabilities remain planned until i
 
 Objective: provide a small deterministic reconciliation workflow using synthetic data and no external infrastructure requirement.
 
-Current implemented subset: versioned `PaymentCaptured` scenario generation, duplicate `PaymentCaptured` delivery injection, missing `PaymentCaptured` delivery injection, delayed `PaymentCaptured` delivery injection, out-of-order `PaymentCaptured` delivery injection, caller-supplied inconsistent-amount `PaymentCaptured` delivery injection, role-specific expected and observed payment projections with contribution evidence, logical cutoff handling, and traceable captured-amount mismatch reconciliation.
+Current implemented subset: versioned `PaymentCaptured` scenario generation, duplicate `PaymentCaptured` delivery injection, missing `PaymentCaptured` delivery injection, delayed `PaymentCaptured` delivery injection, out-of-order `PaymentCaptured` delivery injection, caller-supplied inconsistent-amount `PaymentCaptured` delivery injection, role-specific expected and observed payment projections with contribution evidence, logical cutoff handling, traceable captured-amount mismatch reconciliation, and deterministic `reconciliation-report.v1` JSON output.
 
 Acceptance criteria:
 
@@ -18,7 +18,9 @@ Acceptance criteria:
 - The Fault Manifest is inaccessible to the Reconciliation Engine.
 - A logical Reconciliation Cutoff defines which truth and delivered events are included in the current payment projections.
 - Reconciliation Findings carry stable, immutable expected source-event contributions and observed delivered-event contributions.
+- A versioned reconciliation report serializes scenario configuration, cutoff, ordered snapshots, findings, and contribution traces deterministically without Fault Manifest access.
 - Repeatability tests prove that identical scenario, seed, cutoff, and configuration inputs produce identical findings.
+- Identical report inputs produce byte-for-byte identical UTF-8 JSON.
 - v0.1 has no external infrastructure requirement.
 
 ## v0.2: Event Broker And Persistence Integration

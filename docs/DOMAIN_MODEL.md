@@ -48,6 +48,12 @@ A deterministic execution that compares Expected State and Observed State for a 
 
 Stable reconciliation output describing classified differences between Expected State and Observed State. The implemented payment slice reports captured-amount mismatches and carries immutable expected and observed contribution traces copied from the validated role-specific snapshots. Explicit fault attribution and missing-record classification remain planned. The Reconciliation Engine does not read the Fault Manifest to construct trace evidence.
 
+### Reconciliation Report
+
+An immutable, versioned collection of deterministic reconciliation evidence. The implemented `reconciliation-report.v1` contract records the `payment-captured.v1` Scenario Definition, shared Reconciliation Cutoff, ordered expected and observed snapshot collections, ordered findings, and their ordered contribution traces. Its JSON representation has explicit property order, uses JSON numbers for `decimal` money amounts, formats the scenario starting timestamp with invariant round-trip formatting, and represents the event interval as ticks.
+
+The report has no automatically generated timestamp and cannot contain the Fault Manifest, fault-injection results, or an inferred fault type. It is evidence of the compared state, not an explanation of which fault was injected.
+
 ### Benchmark Evaluator
 
 The evaluation component that may compare Reconciliation Findings with the Fault Manifest after reconciliation completes. It is separate from the Reconciliation Engine.
@@ -123,6 +129,7 @@ Represents a delivery-related charge.
 - Duplicate events must not produce duplicate financial effects.
 - The same Scenario Definition, seed, Reconciliation Cutoff, and configuration must produce the same Reconciliation Findings.
 - The same `payment-captured.v1` Scenario Definition must produce structurally identical truth events.
+- The same report inputs must produce byte-for-byte identical `reconciliation-report.v1` UTF-8 JSON.
 - Reconciliation output ordering must be stable.
 - Every finding must be traceable to source events and delivered events.
 - Every payment snapshot contribution must use the snapshot currency, and contribution totals must equal the aggregate captured amount.
