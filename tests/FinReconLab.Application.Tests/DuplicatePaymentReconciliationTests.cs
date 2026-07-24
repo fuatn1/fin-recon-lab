@@ -210,8 +210,8 @@ public sealed class DuplicatePaymentReconciliationTests
     public void Reconciliation_rejects_different_order_ids()
     {
         var cutoff = new ReconciliationCutoff(1);
-        var expected = new PaymentSnapshot("order-001", new Money(100m, "USD"), cutoff);
-        var observed = new PaymentSnapshot("order-002", new Money(100m, "USD"), cutoff);
+        var expected = CreateExpectedSnapshot("order-001", "USD", cutoff);
+        var observed = CreateObservedSnapshot("order-002", "USD", cutoff);
 
         Assert.Throws<InvalidOperationException>(() => new PaymentReconciliationEngine().Reconcile(expected, observed));
     }
@@ -220,8 +220,8 @@ public sealed class DuplicatePaymentReconciliationTests
     public void Reconciliation_rejects_different_currencies()
     {
         var cutoff = new ReconciliationCutoff(1);
-        var expected = new PaymentSnapshot("order-001", new Money(100m, "USD"), cutoff);
-        var observed = new PaymentSnapshot("order-001", new Money(100m, "EUR"), cutoff);
+        var expected = CreateExpectedSnapshot("order-001", "USD", cutoff);
+        var observed = CreateObservedSnapshot("order-001", "EUR", cutoff);
 
         Assert.Throws<InvalidOperationException>(() => new PaymentReconciliationEngine().Reconcile(expected, observed));
     }
@@ -229,8 +229,8 @@ public sealed class DuplicatePaymentReconciliationTests
     [Fact]
     public void Reconciliation_rejects_different_cutoffs()
     {
-        var expected = new PaymentSnapshot("order-001", new Money(100m, "USD"), new ReconciliationCutoff(1));
-        var observed = new PaymentSnapshot("order-001", new Money(100m, "USD"), new ReconciliationCutoff(2));
+        var expected = CreateExpectedSnapshot("order-001", "USD", new ReconciliationCutoff(1));
+        var observed = CreateObservedSnapshot("order-001", "USD", new ReconciliationCutoff(2));
 
         Assert.Throws<InvalidOperationException>(() => new PaymentReconciliationEngine().Reconcile(expected, observed));
     }
@@ -268,6 +268,32 @@ public sealed class DuplicatePaymentReconciliationTests
             new Money(100m, "USD"),
             logicalSequence,
             SuppliedTimestamp);
+    }
+
+    private static ExpectedPaymentSnapshot CreateExpectedSnapshot(
+        string orderId,
+        string currency,
+        ReconciliationCutoff cutoff)
+    {
+        var amount = new Money(100m, currency);
+        return new ExpectedPaymentSnapshot(
+            orderId,
+            amount,
+            cutoff,
+            [new ExpectedPaymentContribution("payment-captured-001", 1, amount)]);
+    }
+
+    private static ObservedPaymentSnapshot CreateObservedSnapshot(
+        string orderId,
+        string currency,
+        ReconciliationCutoff cutoff)
+    {
+        var amount = new Money(100m, currency);
+        return new ObservedPaymentSnapshot(
+            orderId,
+            amount,
+            cutoff,
+            [new ObservedPaymentContribution("payment-captured-001", 1, 1, 1, amount)]);
     }
 
     private static void AssertDeliveredStreamsEqual(

@@ -59,22 +59,33 @@ public sealed class MoneyTests
     }
 
     [Fact]
-    public void PaymentSnapshot_rejects_null_money()
+    public void Payment_snapshots_reject_null_money()
     {
         Assert.Throws<ArgumentNullException>(
-            () => new PaymentSnapshot("order-001", null!, new ReconciliationCutoff(1)));
+            () => new ExpectedPaymentSnapshot("order-001", null!, new ReconciliationCutoff(1), []));
+        Assert.Throws<ArgumentNullException>(
+            () => new ObservedPaymentSnapshot("order-001", null!, new ReconciliationCutoff(1), []));
     }
 
     [Fact]
     public void ReconciliationFinding_rejects_mismatched_money_currencies()
     {
-        Assert.Throws<InvalidOperationException>(
-            () => new ReconciliationFinding(
-                ReconciliationFindingCategory.CapturedAmountMismatch,
-                "order-001",
-                new ReconciliationCutoff(1),
-                new Money(100m, "USD"),
-                new Money(200m, "EUR"),
-                new Money(100m, "USD")));
+        var cutoff = new ReconciliationCutoff(1);
+        var expected = new ExpectedPaymentSnapshot(
+            "order-001",
+            new Money(100m, "USD"),
+            cutoff,
+            [new ExpectedPaymentContribution("payment-captured-001", 1, new Money(100m, "USD"))]);
+        var observed = new ObservedPaymentSnapshot(
+            "order-001",
+            new Money(200m, "EUR"),
+            cutoff,
+            [new ObservedPaymentContribution("payment-captured-001", 1, 1, 1, new Money(200m, "EUR"))]);
+
+        Assert.Throws<InvalidOperationException>(() => new ReconciliationFinding(
+            ReconciliationFindingCategory.CapturedAmountMismatch,
+            expected,
+            observed,
+            new Money(100m, "USD")));
     }
 }

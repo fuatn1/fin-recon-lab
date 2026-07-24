@@ -4,7 +4,9 @@ namespace FinReconLab.Application;
 
 public sealed class PaymentReconciliationEngine
 {
-    public IReadOnlyList<ReconciliationFinding> Reconcile(PaymentSnapshot expected, PaymentSnapshot observed)
+    public IReadOnlyList<ReconciliationFinding> Reconcile(
+        ExpectedPaymentSnapshot expected,
+        ObservedPaymentSnapshot observed)
     {
         ArgumentNullException.ThrowIfNull(expected);
         ArgumentNullException.ThrowIfNull(observed);
@@ -35,10 +37,8 @@ public sealed class PaymentReconciliationEngine
         [
             new ReconciliationFinding(
                 ReconciliationFindingCategory.CapturedAmountMismatch,
-                expected.OrderId,
-                expected.Cutoff,
-                expected.CapturedAmount,
-                observed.CapturedAmount,
+                expected,
+                observed,
                 signedDelta)
         ];
     }

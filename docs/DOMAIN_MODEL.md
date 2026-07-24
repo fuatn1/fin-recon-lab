@@ -18,7 +18,7 @@ The implemented truth-stream generator currently emits ordered `PaymentCaptured`
 
 ### Expected State
 
-The financial state that should exist after applying configured rules and invariants to the Truth Event Stream.
+The financial state that should exist after applying configured rules and invariants to truth events included by the cutoff. The implemented `ExpectedPaymentSnapshot` carries ordered `ExpectedPaymentContribution` evidence containing source event id, source logical sequence, and applied clean captured amount.
 
 ### Fault Injector
 
@@ -30,7 +30,7 @@ The faulted event stream visible to the observed-side projection. Each delivered
 
 ### Observed State
 
-The financial state projected from each delivered event's `DeliveredCapturedAmount` up to the configured Reconciliation Cutoff. Expected State continues to use the clean truth-event amount.
+The financial state projected from each included delivered event's `DeliveredCapturedAmount` up to the configured Reconciliation Cutoff. The implemented `ObservedPaymentSnapshot` carries ordered `ObservedPaymentContribution` evidence containing source event id, source logical sequence, delivery sequence, delivery attempt, and applied delivered captured amount. Expected State continues to use the clean truth-event amount.
 
 ### Fault Manifest
 
@@ -46,7 +46,7 @@ A deterministic execution that compares Expected State and Observed State for a 
 
 ### Reconciliation Findings
 
-Stable reconciliation output describing classified differences between Expected State and Observed State. The implemented payment slice currently reports captured-amount mismatches; explicit missing-record classification remains planned. Findings must be traceable to source events and delivered events as the model expands.
+Stable reconciliation output describing classified differences between Expected State and Observed State. The implemented payment slice reports captured-amount mismatches and carries immutable expected and observed contribution traces copied from the validated role-specific snapshots. Explicit fault attribution and missing-record classification remain planned. The Reconciliation Engine does not read the Fault Manifest to construct trace evidence.
 
 ### Benchmark Evaluator
 
@@ -125,6 +125,7 @@ Represents a delivery-related charge.
 - The same `payment-captured.v1` Scenario Definition must produce structurally identical truth events.
 - Reconciliation output ordering must be stable.
 - Every finding must be traceable to source events and delivered events.
+- Every payment snapshot contribution must use the snapshot currency, and contribution totals must equal the aggregate captured amount.
 - Recovery recommendations must not mutate data automatically in v0.1.
 - Expected State and Observed State must be compared using explicit transaction identity.
 - Events beyond the configured Reconciliation Cutoff must not affect the corresponding Expected State or Observed State projection for that run.
