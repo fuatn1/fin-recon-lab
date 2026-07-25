@@ -54,6 +54,60 @@ An immutable, versioned collection of deterministic reconciliation evidence. The
 
 The report has no automatically generated timestamp and cannot contain the Fault Manifest, fault-injection results, or an inferred fault type. It is evidence of the compared state, not an explanation of which fault was injected.
 
+## Planned Operational Concepts
+
+The concepts in this section are planned product-direction terms. They do not yet have implemented domain or application types.
+
+### Authoritative Source Adapter
+
+A domain-specific, normally read-only adapter that provides ordered authoritative payment events from a database, retained event source, approved export, replay interface, or another source-specific implementation. It must define identity, ordering, money, and high-watermark semantics explicitly. An Event Store or broker is not required.
+
+### Observed Projection Adapter
+
+A domain-specific, normally read-only adapter that provides the payment projection state to compare. It must define how projection identities, amounts, currencies, versions, and observation boundaries map into reconciliation inputs. FinReconLab does not automatically understand arbitrary projection schemas.
+
+### Versioned Reconciliation Definition
+
+A planned identity and compatibility boundary for an operational reconciliation use case. It identifies the adapter and mapping contract version, expected-state reducer or rule version, partitioning semantics, and compatible checkpoint and expected-state namespace. The exact API and persistence schema remain future decisions. Persisted operational state must not be silently reused after an incompatible definition change.
+
+### Reconciliation Partition
+
+A bounded, explicitly identified unit of operational work. Partition key semantics, ownership, ordering, and isolation remain to be designed and tested.
+
+### Source High-Watermark
+
+An immutable boundary selected from the authoritative source for a bounded operational run. It limits the source events considered by that run. It does not prove that the observed projection has processed the same source range. It is distinct from a projection observation boundary, persisted worker progress, and the implemented v0.1 synthetic shared sequence cutoff.
+
+### Projection Observation Boundary
+
+Planned evidence that an observed projection read is comparable to the selected source high-watermark. The observed-projection adapter must establish that the projection processed through a comparable source position, provide an equivalent immutable as-of read, or apply an explicitly configured stabilization policy with recorded limitations. Wall-clock timestamps alone are insufficient.
+
+If comparability cannot be established, a future tested contract must reject or defer the run, or explicitly mark it provisional. It must not silently publish a conclusive discrepancy.
+
+### Incremental Expected State
+
+FinReconLab-owned planned reducer state persisted by versioned reconciliation definition, partition, and business identity. Authoritative events update it in stable order during bounded processing. It allows later batches to retain prior deterministic aggregates without replaying complete history and remains distinct from the external observed projection. Expected-state persistence failure prevents worker-checkpoint advancement.
+
+### Reconciliation Checkpoint
+
+FinReconLab-owned durable progress for a partition and compatible reconciliation-definition namespace. A checkpoint records only safely completed work so processing can resume. Planned progress is monotonic and cannot advance after partial persistence failure. It is distinct from the source high-watermark, projection observation boundary, and v0.1 synthetic Reconciliation Cutoff.
+
+### Operational Batch Identity
+
+A planned deterministic identity for a reconciliation definition, partition, source range, projection observation boundary, and execution attempt semantics. Findings and versioned reports use a deterministic batch or run identity so replaying the same completed input cannot duplicate them.
+
+### Batch Completion
+
+A planned consistency boundary across incremental expected-state updates, findings, versioned reports, required batch metadata, and checkpoint advancement. A batch is complete only when all required FinReconLab-owned state is committed atomically or through a documented replay-safe idempotent protocol. Failure before completion leaves the batch safely repeatable from its prior checkpoint.
+
+### Incremental Reconciliation Worker
+
+A planned out-of-band orchestrator that reads bounded authoritative events and comparable observed projection state through adapters, updates incremental expected state, invokes the deterministic core, persists findings and reports, and advances checkpoints according to the batch-completion contract. It does not participate in production transaction completion.
+
+### Operational Reconciliation State
+
+FinReconLab-owned versioned reconciliation definitions, incremental expected state, checkpoints, findings, versioned reports, deterministic batch metadata, and required execution metadata. This state remains distinct from the external observed projection. Writes to authoritative sources or observed projections are outside the planned boundary unless a future accepted ADR states otherwise.
+
 ### Benchmark Evaluator
 
 The evaluation component that may compare Reconciliation Findings with the Fault Manifest after reconciliation completes. It is separate from the Reconciliation Engine.
