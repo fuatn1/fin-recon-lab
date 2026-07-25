@@ -26,4 +26,18 @@ A deterministic reconciliation process needs explicit inputs, stable configurati
 
 ## Current Project Position
 
-FinReconLab does not yet solve the full set of problems described here. The current repository includes project documentation and narrow deterministic `PaymentCaptured` scenario-generation, duplicate-delivery, missing-delivery, delayed-delivery, out-of-order delivery, and inconsistent-amount delivery reconciliation slices that demonstrate expected-state versus observed-state comparison for synthetic payment delivery failures.
+FinReconLab does not yet solve the full set of problems described here. The current repository implements a narrow deterministic `PaymentCaptured` core with versioned scenario generation, duplicate, missing, delayed, out-of-order, and inconsistent-amount delivery faults, expected and observed projections, logical cutoff handling, traceable findings, and deterministic `reconciliation-report.v1` JSON. This tested synthetic foundation is reusable core behavior, not an operational service.
+
+## Planned Operational Problem
+
+The planned operational reference path addresses projection integrity outside the production transaction hot path. It is intended to incrementally derive expected payment state from an authoritative source, compare it with an observed payment projection, persist explainable findings and versioned reports, and resume safely from explicit checkpoints.
+
+The authoritative source may be a database, retained event source, approved export, replay interface, or another source-specific implementation. It is not assumed to be an Event Store or broker. The observed projection also requires a domain-specific read adapter. FinReconLab cannot automatically understand arbitrary projections without explicit identity, ordering, money, and state-mapping semantics.
+
+A planned source high-watermark bounds authoritative input, while a separate projection observation boundary establishes whether the observed projection is comparable to that source range. Final findings require evidence that the projection processed through a comparable source position, can be read at an equivalent immutable boundary, or is covered by an explicitly configured stabilization policy. Without comparability, a future tested contract must reject or defer the run, or explicitly mark it provisional rather than publish a conclusive discrepancy.
+
+The planned worker maintains FinReconLab-owned incremental expected state separately from the external observed projection so deterministic aggregates survive bounded batches. A versioned reconciliation definition identifies compatible adapter mappings, reducer rules, partition semantics, expected-state namespaces, and checkpoints. Expected-state updates, findings, versioned reports, deterministic batch metadata, and checkpoint advancement complete atomically or through a documented replay-safe idempotent protocol.
+
+The planned toolkit does not replace either source, intercept transaction processing, infer injected fault categories from operational evidence, or automatically repair production state. Source and projection access should normally be read-only. Planned FinReconLab-owned persistence includes versioned reconciliation definitions, incremental expected state, checkpoints, findings, versioned reports, deterministic batch metadata, and other operational metadata.
+
+No source or projection comparability contract, versioned operational reconciliation definition, incremental expected-state persistence, atomic or replay-safe batch completion, runnable worker, operational adapter, checkpoint persistence, partitioning, PostgreSQL integration, API, CLI, Docker environment, telemetry integration, benchmark result, external evaluation, or production-ready behavior exists yet.

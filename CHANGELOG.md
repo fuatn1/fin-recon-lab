@@ -34,3 +34,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Versioned `reconciliation-report.v1` contract with immutable, ordered scenario-level reconciliation evidence.
 - Deterministic UTF-8 JSON report serialization with explicit property, snapshot, finding, and contribution ordering.
 - ADR for deterministic reconciliation reporting and continued Fault Manifest isolation.
+- ADR-0012 documentation for the planned out-of-band boundary, comparable source and projection observations, versioned incremental expected state, replay-safe batch completion, and optional transport adapters.
+
+### Changed
+
+- Product direction realigned around an out-of-band operational reconciliation boundary while preserving the implemented v0.1 deterministic core.
+- Outcome-led v0.2 through v0.5 roadmap for operational contracts, a synthetic PostgreSQL reference slice, scale and recovery evidence, and external technical validation.
